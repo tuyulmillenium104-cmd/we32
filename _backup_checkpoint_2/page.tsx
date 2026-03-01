@@ -819,6 +819,15 @@ function Notification({ message, onClose }: { message: string; onClose: () => vo
 function AppContent() {
   const { t, language, formatTimeWithLabel } = useLanguage()
   const getDayName = useDayName()
+  const { theme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+  
+  // Prevent hydration mismatch by waiting for mount
+  useIsomorphicLayoutEffect(() => {
+    setMounted(true)
+  }, [])
+  
+  const isGamingMode = mounted && theme === 'dark'
   
   const [selectedDay, setSelectedDay] = useState<string>(getCurrentUTCDay())
   const [alarmedEvents, setAlarmedEvents] = useState<Set<string>>(new Set())
@@ -1194,10 +1203,14 @@ function AppContent() {
   }, [])
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0a0a0f] text-[#e0e0e0] retro-grid relative crt">
-      {/* Animated pixel decorations */}
-      <div className="fixed top-0 left-0 w-full h-1 bg-gradient-to-r from-[#00fff7] via-[#ff00ff] to-[#39ff14] opacity-50 z-50" />
-      <div className="fixed bottom-0 left-0 w-full h-1 bg-gradient-to-r from-[#39ff14] via-[#ff00ff] to-[#00fff7] opacity-50 z-50" />
+    <div className={`min-h-screen flex flex-col bg-background text-foreground relative ${isGamingMode ? 'retro-grid crt' : ''}`}>
+      {/* Animated pixel decorations - only in Gaming Mode */}
+      {isGamingMode && (
+        <>
+          <div className="fixed top-0 left-0 w-full h-1 bg-gradient-to-r from-[#00fff7] via-[#ff00ff] to-[#39ff14] opacity-50 z-50" />
+          <div className="fixed bottom-0 left-0 w-full h-1 bg-gradient-to-r from-[#39ff14] via-[#ff00ff] to-[#00fff7] opacity-50 z-50" />
+        </>
+      )}
 
       <AnimatePresence>
         {notification && (
@@ -1238,23 +1251,27 @@ function AppContent() {
       </AnimatePresence>
 
       {/* Header */}
-      <header className="sticky top-0 z-40 border-b-4 border-[#00fff7] bg-[#0a0a0f]/95 backdrop-blur-sm relative">
-        <PixelDecoration className="top-2 left-4" />
-        <PixelDecoration className="top-2 right-4" />
+      <header className={`sticky top-0 z-40 backdrop-blur-sm relative ${isGamingMode ? 'border-b-4 border-[#00fff7] bg-[#0a0a0f]/95' : 'border-b border-border bg-card/95'}`}>
+        {isGamingMode && (
+          <>
+            <PixelDecoration className="top-2 left-4" />
+            <PixelDecoration className="top-2 right-4" />
+          </>
+        )}
         
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 border-3 border-[#00fff7] bg-[#12121a] flex items-center justify-center pixel-shadow relative overflow-hidden">
+              <div className={`w-12 h-12 flex items-center justify-center relative overflow-hidden ${isGamingMode ? 'border-3 border-[#00fff7] bg-[#12121a] pixel-shadow' : 'border border-border bg-card rounded-lg'}`}>
                 <img 
                   src="/genlayer-logo.jpg" 
                   alt="GenLayer" 
                   className="w-10 h-10 object-contain"
                 />
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-[#39ff14] animate-pulse" />
+                {isGamingMode && <div className="absolute -top-1 -right-1 w-3 h-3 bg-[#39ff14] animate-pulse" />}
               </div>
               <div>
-                <h1 className="text-[10px] font-pixel neon-text-cyan glitch" data-text={t('app.title')}>
+                <h1 className={`text-[10px] ${isGamingMode ? 'font-pixel neon-text-cyan glitch' : 'font-semibold text-foreground'}`} data-text={t('app.title')}>
                   {t('app.title')}
                 </h1>
               </div>
@@ -1262,13 +1279,13 @@ function AppContent() {
 
             <div className="flex items-center gap-2">
               {/* Clock Display */}
-              <div className="hidden sm:flex flex-col items-center px-3 py-1 border-3 border-[#2a2a4e] bg-[#12121a]">
+              <div className={`hidden sm:flex flex-col items-center px-3 py-1 ${isGamingMode ? 'border-3 border-[#2a2a4e] bg-[#12121a]' : 'border border-border bg-card rounded-md'}`}>
                 <div className="flex items-center gap-2">
-                  <Clock className="w-3 h-3 text-[#00fff7]" />
-                  <span className="text-xs font-mono text-[#00fff7]">{currentTime}</span>
-                  <span className="text-[8px] font-pixel text-[#ff00ff]">{language === 'id' ? 'WIB' : 'UTC'}</span>
+                  <Clock className={`w-3 h-3 ${isGamingMode ? 'text-[#00fff7]' : 'text-primary'}`} />
+                  <span className={`text-xs font-mono ${isGamingMode ? 'text-[#00fff7]' : 'text-foreground'}`}>{currentTime}</span>
+                  <span className={`text-[8px] ${isGamingMode ? 'font-pixel text-[#ff00ff]' : 'text-muted-foreground'}`}>{language === 'id' ? 'WIB' : 'UTC'}</span>
                 </div>
-                <span className="text-[8px] font-pixel text-[#8888aa]">
+                <span className={`text-[8px] ${isGamingMode ? 'font-pixel text-[#8888aa]' : 'text-muted-foreground'}`}>
                   {currentDateString || 'Loading...'}
                 </span>
               </div>
@@ -1990,19 +2007,21 @@ function AppContent() {
       </main>
 
       {/* Footer */}
-      <footer className="mt-auto border-t-4 border-[#2a2a4e] bg-[#0a0a0f] relative">
-        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-[#00fff7] via-[#ff00ff] to-[#39ff14] opacity-30" />
+      <footer className={`mt-auto relative ${isGamingMode ? 'border-t-4 border-[#2a2a4e] bg-[#0a0a0f]' : 'border-t border-border bg-card'}`}>
+        {isGamingMode && <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-[#00fff7] via-[#ff00ff] to-[#39ff14] opacity-30" />}
         <div className="max-w-4xl mx-auto px-4 py-4 text-center">
           <div className="flex items-center justify-center gap-2">
-            <span className="text-[#ffd700]">★</span>
-            <p className="text-[10px] font-pixel text-[#8888aa]">
+            <span className={isGamingMode ? 'text-[#ffd700]' : 'text-primary'}>★</span>
+            <p className={`text-[10px] ${isGamingMode ? 'font-pixel text-[#8888aa]' : 'text-muted-foreground'}`}>
               {t('footer')}
             </p>
-            <span className="text-[#ffd700]">★</span>
+            <span className={isGamingMode ? 'text-[#ffd700]' : 'text-primary'}>★</span>
           </div>
-          <p className="text-[10px] text-[#2a2a4e] mt-2 font-pixel">
-            PRESS START TO CONTINUE
-          </p>
+          {isGamingMode && (
+            <p className="text-[10px] text-[#2a2a4e] mt-2 font-pixel">
+              PRESS START TO CONTINUE
+            </p>
+          )}
         </div>
       </footer>
 
