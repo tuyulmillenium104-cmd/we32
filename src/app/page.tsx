@@ -150,36 +150,23 @@ function PixelDecoration({ className }: { className?: string }) {
   )
 }
 
-function GameControls({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex items-center gap-1">
-      {children}
-    </div>
-  )
+// Format duration in minutes to readable string
+function formatDuration(minutes: number): string {
+  if (minutes < 60) {
+    return `${minutes}m`
+  }
+  const hours = Math.floor(minutes / 60)
+  const mins = minutes % 60
+  if (mins === 0) {
+    return `${hours}h`
+  }
+  return `${hours}h ${mins}m`
 }
 
-function PixelProgressBar({ value, max, color = "#39ff14" }: { value: number; max: number; color?: string }) {
-  const percentage = Math.min((value / max) * 100, 100)
-  return (
-    <div className="w-full h-4 border-2 border-[#2a2a4e] bg-[#0a0a0f] relative overflow-hidden">
-      <div 
-        className="h-full transition-all duration-300"
-        style={{ 
-          width: `${percentage}%`,
-          background: `repeating-linear-gradient(
-            90deg,
-            ${color} 0px,
-            ${color} 4px,
-            transparent 4px,
-            transparent 8px
-          )`
-        }}
-      />
-      <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-[10px] font-pixel text-white drop-shadow-lg">{percentage.toFixed(0)}%</span>
-      </div>
-    </div>
-  )
+// Truncate text with ellipsis
+function truncateText(text: string, maxLength: number): string {
+  if (text.length <= maxLength) return text
+  return text.slice(0, maxLength).trim() + '...'
 }
 
 function ThemeToggle() {
@@ -1687,10 +1674,15 @@ function AppContent() {
                 )}
                 <div>
                   <h2 className={`text-base font-bold mb-2 ${isGamingMode ? 'text-sm font-pixel neon-text-cyan' : 'text-foreground'}`}>{nextEvent.name}</h2>
-                  <div className={`flex items-center gap-4 text-base ${isGamingMode ? 'text-[#8888aa]' : 'text-muted-foreground'}`}>
+                  <div className={`flex items-center gap-4 text-base flex-wrap ${isGamingMode ? 'text-[#8888aa]' : 'text-muted-foreground'}`}>
                     <span className="flex items-center gap-2">
                       <Clock className={`w-4 h-4 ${isGamingMode ? 'text-[#00fff7]' : 'text-primary'}`} />
                       <span className={isGamingMode ? 'text-[#00fff7] font-pixel' : 'text-foreground'}>{formatTimeWithLabel(nextEvent.timeUTC)}</span>
+                      {nextEvent.duration && (
+                        <span className={`text-xs ${isGamingMode ? 'text-[#ffd700]' : 'text-yellow-600 dark:text-yellow-400'}`}>
+                          ({formatDuration(nextEvent.duration)})
+                        </span>
+                      )}
                     </span>
                     <span className="flex items-center gap-2">
                       <Calendar className={`w-4 h-4 ${isGamingMode ? 'text-[#ff00ff]' : 'text-primary'}`} />
@@ -1818,53 +1810,90 @@ function AppContent() {
             </div>
             <h3 className={`text-sm font-semibold ${isGamingMode ? 'text-[10px] font-pixel neon-text-magenta' : 'text-foreground'}`}>{t('todayEvents')} ({todayEvents.length})</h3>
           </div>
-          <div className="space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
+          <div className="space-y-2 max-h-64 overflow-y-auto custom-scrollbar">
             {todayEvents.slice(0, 5).map((event, index) => (
               <motion.div 
                 key={event.id} 
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className={`flex items-center justify-between p-3 transition-all cursor-pointer ${isGamingMode 
+                className={`p-3 transition-all cursor-pointer ${isGamingMode 
                   ? `border-3 ${isEventLive(event) ? 'border-[#ff0040] bg-[#ff0040]/10' : 'border-[#2a2a4e] hover:border-[#ff00ff] hover:bg-[#ff00ff]/5'}` 
                   : `${isEventLive(event) ? 'border border-red-500 bg-red-50 dark:bg-red-900/20' : 'border border-border hover:border-primary hover:bg-muted/50'} rounded-lg`}`}
                 onClick={() => openEventDetail(event)}
               >
-                <div className="flex items-center gap-3">
-                  {event.icon && (
-                    <div className="relative">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    {event.icon && (
                       <img 
                         src={event.icon} 
                         alt={event.name}
-                        className={`w-10 h-10 ${isGamingMode ? 'border-2 border-[#ff00ff]' : 'border border-border rounded-lg'}`}
+                        className={`w-8 h-8 ${isGamingMode ? 'border-2 border-[#ff00ff]' : 'border border-border rounded'}`}
                         style={{ imageRendering: 'pixelated' }}
                       />
-                      {isEventLive(event) && (
-                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-[#ff0040] rounded-full animate-pulse" />
-                      )}
+                    )}
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-sm font-medium ${isGamingMode ? 'text-[#00fff7]' : 'text-foreground'}`}>{event.name}</span>
+                        {isEventLive(event) && (
+                          <span className={`px-2 py-0.5 text-white text-xs uppercase animate-pulse ${isGamingMode ? 'bg-[#ff0040] font-pixel' : 'bg-red-500 rounded-full font-semibold'}`}>LIVE</span>
+                        )}
+                        {isClient && alarmedEvents.has(event.id) && !isEventLive(event) && (
+                          <Bell className={`w-3 h-3 animate-pulse ${isGamingMode ? 'text-[#39ff14]' : 'text-green-500'}`} />
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <Clock className={`w-3 h-3 ${isGamingMode ? 'text-[#8888aa]' : 'text-muted-foreground'}`} />
+                        <span className={`text-xs ${isGamingMode ? 'text-[#00fff7]' : 'text-primary'}`}>{formatTimeWithLabel(event.timeUTC)}</span>
+                        {event.duration && (
+                          <span className={`text-xs ${isGamingMode ? 'text-[#ffd700]' : 'text-yellow-600 dark:text-yellow-400'}`}>
+                            ({formatDuration(event.duration)})
+                          </span>
+                        )}
+                      </div>
                     </div>
+                  </div>
+                  <RoleBadgeTooltip roleName={event.roleReq} roleColor={event.roleColor} t={t}>
+                    <span 
+                      className={`text-xs px-2 py-1 cursor-pointer ${isGamingMode ? 'border-2 font-pixel' : 'border rounded'}`}
+                      style={{ 
+                        borderColor: event.roleColor,
+                        color: event.roleColor,
+                      }}
+                    >
+                      {event.roleReq}
+                    </span>
+                  </RoleBadgeTooltip>
+                </div>
+                {/* Description */}
+                {event.description && (
+                  <p className={`text-xs mb-2 ${isGamingMode ? 'text-[#8888aa]' : 'text-muted-foreground'}`}>
+                    {truncateText(event.description, 80)}
+                  </p>
+                )}
+                {/* Rewards */}
+                <div className="flex flex-wrap gap-1.5">
+                  {event.hasPOAP && (
+                    <span className={`text-[10px] px-2 py-0.5 ${isGamingMode ? 'bg-[#ff00ff]/20 text-[#ff00ff] border border-[#ff00ff]' : 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded'}`}>
+                      🎁 POAP
+                    </span>
                   )}
-                  <Clock className={`w-4 h-4 ${isGamingMode ? 'text-[#8888aa]' : 'text-muted-foreground'}`} />
-                  <span className={`text-sm ${isGamingMode ? 'text-[#00fff7] font-pixel' : 'text-primary'}`}>{formatTimeWithLabel(event.timeUTC)}</span>
-                  <span className="text-base truncate max-w-[120px]">{event.name}</span>
-                  {isEventLive(event) && (
-                    <span className={`px-2 py-0.5 text-white text-xs uppercase animate-pulse ${isGamingMode ? 'bg-[#ff0040] font-pixel' : 'bg-red-500 rounded-full font-semibold'}`}>LIVE</span>
+                  {event.hasInsight && (
+                    <span className={`text-[10px] px-2 py-0.5 ${isGamingMode ? 'bg-[#00fff7]/20 text-[#00fff7] border border-[#00fff7]' : 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400 rounded'}`}>
+                      ⚡ Insight
+                    </span>
                   )}
-                  {isClient && alarmedEvents.has(event.id) && !isEventLive(event) && (
-                    <Bell className={`w-4 h-4 animate-pulse ${isGamingMode ? 'text-[#39ff14]' : 'text-green-500'}`} />
+                  {event.xpRewards.length > 0 && (
+                    <span className={`text-[10px] px-2 py-0.5 ${isGamingMode ? 'bg-[#39ff14]/20 text-[#39ff14] border border-[#39ff14]' : 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded'}`}>
+                      🏆 Max {getMaxXP(event).toLocaleString()} XP
+                    </span>
+                  )}
+                  {event.rewards && event.rewards.length > 0 && !event.hasPOAP && !event.hasInsight && (
+                    <span className={`text-[10px] px-2 py-0.5 ${isGamingMode ? 'bg-[#ffd700]/20 text-[#ffd700] border border-[#ffd700]' : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 rounded'}`}>
+                      {event.rewards.slice(0, 2).join(', ')}
+                    </span>
                   )}
                 </div>
-                <RoleBadgeTooltip roleName={event.roleReq} roleColor={event.roleColor} t={t}>
-                  <span 
-                    className={`text-xs px-3 py-1 cursor-pointer ${isGamingMode ? 'border-2 font-pixel' : 'border rounded-lg'}`}
-                    style={{ 
-                      borderColor: event.roleColor,
-                      color: event.roleColor,
-                    }}
-                  >
-                    {event.roleReq}
-                  </span>
-                </RoleBadgeTooltip>
               </motion.div>
             ))}
             {todayEvents.length === 0 && (
@@ -1911,7 +1940,7 @@ function AppContent() {
             </TabsList>
           </Tabs>
 
-          <div className="space-y-2 max-h-72 overflow-y-auto custom-scrollbar">
+          <div className="space-y-2 max-h-96 overflow-y-auto custom-scrollbar">
             {filteredEvents.map((event, index) => (
               <motion.div
                 key={event.id}
@@ -1923,7 +1952,7 @@ function AppContent() {
                   : `${isEventLive(event) ? 'border border-red-500 bg-red-50 dark:bg-red-900/20' : 'border border-border hover:border-primary hover:bg-muted/50'} rounded-lg`}`}
                 onClick={() => openEventDetail(event)}
               >
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start justify-between gap-3 mb-2">
                   <div className="flex items-start gap-3 flex-1 min-w-0">
                     {event.icon && (
                       <div className="relative">
@@ -1939,26 +1968,25 @@ function AppContent() {
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <Clock className={`w-4 h-4 ${isGamingMode ? 'text-[#00fff7]' : 'text-primary'}`} />
                         <span className={`text-sm ${isGamingMode ? 'font-pixel text-[#00fff7]' : 'text-primary'}`}>{formatTimeWithLabel(event.timeUTC)}</span>
+                        {event.duration && (
+                          <span className={`text-xs ${isGamingMode ? 'text-[#ffd700]' : 'text-yellow-600 dark:text-yellow-400'}`}>
+                            ({formatDuration(event.duration)})
+                          </span>
+                        )}
                         {isEventLive(event) && (
                           <span className={`px-2 py-0.5 text-white text-xs uppercase animate-pulse ${isGamingMode ? 'bg-[#ff0040] font-pixel' : 'bg-red-500 rounded-full font-semibold'}`}>LIVE</span>
                         )}
                         {event.isSpecial && (
-                          <span className={`${isGamingMode ? 'text-[#ffd700]' : 'text-yellow-500'} animate-pulse`}>★</span>
+                          <span className={`${isGamingMode ? 'text-[#ffd700]' : 'text-yellow-500'} animate-pulse`}>★ SPECIAL</span>
                         )}
                         {isClient && alarmedEvents.has(event.id) && !isEventLive(event) && (
                           <Bell className={`w-4 h-4 animate-pulse ${isGamingMode ? 'text-[#39ff14]' : 'text-green-500'}`} />
                         )}
                       </div>
                       <h4 className="text-base font-bold truncate mt-1">{event.name}</h4>
-                      {event.xpRewards.length > 0 && (
-                        <div className={`text-xs mt-1 ${isGamingMode ? 'text-[#ffd700] font-pixel' : 'text-yellow-600 dark:text-yellow-400'}`}>
-                          <Trophy className="w-3 h-3 inline mr-1" />
-                          MAX: {getMaxXP(event).toLocaleString('en-US')} XP
-                        </div>
-                      )}
                     </div>
                   </div>
 
@@ -1974,6 +2002,37 @@ function AppContent() {
                       {event.roleReq}
                     </span>
                   </RoleBadgeTooltip>
+                </div>
+                
+                {/* Description */}
+                {event.description && (
+                  <p className={`text-xs mb-2 ${isGamingMode ? 'text-[#8888aa]' : 'text-muted-foreground'}`}>
+                    {truncateText(event.description, 100)}
+                  </p>
+                )}
+                
+                {/* Rewards */}
+                <div className="flex flex-wrap gap-1.5">
+                  {event.hasPOAP && (
+                    <span className={`text-[10px] px-2 py-0.5 ${isGamingMode ? 'bg-[#ff00ff]/20 text-[#ff00ff] border border-[#ff00ff]' : 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded'}`}>
+                      🎁 POAP
+                    </span>
+                  )}
+                  {event.hasInsight && (
+                    <span className={`text-[10px] px-2 py-0.5 ${isGamingMode ? 'bg-[#00fff7]/20 text-[#00fff7] border border-[#00fff7]' : 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400 rounded'}`}>
+                      ⚡ Insight
+                    </span>
+                  )}
+                  {event.xpRewards.length > 0 && (
+                    <span className={`text-[10px] px-2 py-0.5 ${isGamingMode ? 'bg-[#39ff14]/20 text-[#39ff14] border border-[#39ff14]' : 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded'}`}>
+                      🏆 Max {getMaxXP(event).toLocaleString()} XP
+                    </span>
+                  )}
+                  {event.rewards && event.rewards.length > 0 && !event.hasPOAP && !event.hasInsight && (
+                    <span className={`text-[10px] px-2 py-0.5 ${isGamingMode ? 'bg-[#ffd700]/20 text-[#ffd700] border border-[#ffd700]' : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 rounded'}`}>
+                      {event.rewards.slice(0, 2).join(', ')}
+                    </span>
+                  )}
                 </div>
               </motion.div>
             ))}
