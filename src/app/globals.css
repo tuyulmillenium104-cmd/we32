@@ -99,7 +99,7 @@
 }
 
 .dark {
-  /* Retro Pixel Game Theme - Dark Mode (Gaming Mode) */
+  /* Retro Pixel Game Theme - Dark Mode (Default) */
   --background: #0a0a0f;
   --foreground: #e0e0e0;
   --card: #12121a;
@@ -133,43 +133,6 @@
   --sidebar-accent-foreground: #ffffff;
   --sidebar-border: #2a2a4e;
   --sidebar-ring: #00fff7;
-}
-
-.light {
-  /* Normal Clean Light Theme (Biasa Mode) - WHITE */
-  --background: #ffffff;
-  --foreground: #1a1a2e;
-  --card: #f8f9fa;
-  --card-foreground: #1a1a2e;
-  --popover: #ffffff;
-  --popover-foreground: #1a1a2e;
-  --primary: #3b82f6;
-  --primary-foreground: #ffffff;
-  --secondary: #e5e7eb;
-  --secondary-foreground: #1a1a2e;
-  --muted: #f3f4f6;
-  --muted-foreground: #6b7280;
-  --accent: #8b5cf6;
-  --accent-foreground: #ffffff;
-  --destructive: #ef4444;
-  --border: #e5e7eb;
-  --input: #e5e7eb;
-  --ring: #3b82f6;
-  
-  --chart-1: #3b82f6;
-  --chart-2: #8b5cf6;
-  --chart-3: #10b981;
-  --chart-4: #f59e0b;
-  --chart-5: #ef4444;
-  
-  --sidebar: #f8f9fa;
-  --sidebar-foreground: #1a1a2e;
-  --sidebar-primary: #3b82f6;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #8b5cf6;
-  --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: #e5e7eb;
-  --sidebar-ring: #3b82f6;
 }
 
 @layer base {
@@ -692,86 +655,9 @@ button:not([role="tab"]):not([data-slot="dialog-close"]) {
 
 /* Light mode adjustments */
 .light .retro-grid {
-  background-image: none;
-}
-
-.light .crt::before,
-.light .crt::after {
-  display: none;
-}
-
-.light .neon-text-cyan,
-.light .neon-text-magenta,
-.light .neon-text-lime,
-.light .neon-text-gold,
-.light .neon-text-yellow {
-  text-shadow: none;
-  animation: none;
-}
-
-.light .pixel-button {
-  box-shadow: none;
-  border: 1px solid var(--border);
-}
-
-.light .pixel-button:hover {
-  transform: none;
-  box-shadow: none;
-}
-
-.light .pulse-neon {
-  animation: none;
-}
-
-.light .font-pixel {
-  font-family: var(--font-sans), sans-serif !important;
-}
-
-.light .font-pixel-body {
-  font-family: var(--font-sans), sans-serif !important;
-}
-
-/* Dialog clean styling for light mode */
-.light [data-slot="dialog-content"] {
-  border: 1px solid var(--border) !important;
-  border-radius: 8px !important;
-  background: var(--card) !important;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
-}
-
-.light [data-slot="dialog-overlay"] {
-  background: rgba(0, 0, 0, 0.5) !important;
-  backdrop-filter: blur(4px) !important;
-}
-
-/* Tabs clean styling for light mode */
-.light [role="tablist"] {
-  border: 1px solid var(--border) !important;
-  background: var(--card) !important;
-  border-radius: 6px !important;
-  box-shadow: none !important;
-}
-
-.light [role="tab"] {
-  border-radius: 4px !important;
-  text-transform: none;
-  border: none !important;
-}
-
-.light [role="tab"]:hover {
-  background: var(--muted) !important;
-}
-
-.light [role="tab"][data-state="active"] {
-  background: var(--primary) !important;
-  color: var(--primary-foreground) !important;
-  box-shadow: none !important;
-}
-
-/* Button clean styling for light mode */
-.light button:not([role="tab"]):not([data-slot="dialog-close"]) {
-  border-radius: 6px !important;
-  text-transform: none;
+  background-image: 
+    linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px);
 }
 
 /* Selection color */

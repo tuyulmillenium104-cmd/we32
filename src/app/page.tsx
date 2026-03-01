@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTheme } from 'next-themes'
 import { 
   Clock, Trophy, Bell, Users, ChevronRight, Zap,
   Calendar, Sun, Moon,
-  Star, Award, BellRing, Check, Globe,
+  Star, Award, ExternalLink, BellRing, Check, Globe,
   Gamepad2, Sword, Shield, Heart, Flame
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -22,7 +22,7 @@ import {
 import { 
   events, roles, functionalRoles, DAYS,
   getTodayEvents, getNextEvent,
-  xpPoapSources, monthlyContributorHighlights, importantNotes,
+  xpPoapSources, monthlyContributorHighlights, importantNotes, importantLinks,
   type Event
 } from '@/lib/events-data'
 import { LanguageProvider, useLanguage, useDayName } from '@/lib/language-context'
@@ -32,26 +32,6 @@ import { PressStart } from '@/components/PressStart'
 function getCurrentUTCDay(): string {
   const days = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY']
   return days[new Date().getUTCDay()]
-}
-
-// Check if event is currently live using event's duration
-function isEventLive(event: Event): boolean {
-  const now = new Date()
-  const currentDay = DAYS[new Date().getUTCDay()]
-  if (event.day !== currentDay) return false
-
-  const [hours, minutes] = event.timeUTC.split(':').map(Number)
-  const eventStartMinutes = hours * 60 + minutes
-  const eventDuration = event.duration || 60 // Default 60 minutes if not specified
-  const eventEndMinutes = eventStartMinutes + eventDuration
-  const nowMinutes = now.getUTCHours() * 60 + now.getUTCMinutes()
-
-  return nowMinutes >= eventStartMinutes && nowMinutes < eventEndMinutes
-}
-
-// Get current live events
-function getLiveEvents(): Event[] {
-  return events.filter(event => isEventLive(event))
 }
 
 // Countdown timer hook
@@ -108,16 +88,14 @@ function useCurrentTime() {
       const now = new Date()
       
       if (language === 'id') {
-        // Indonesian: 24-hour format for WIB
-        setTime(now.toLocaleTimeString('en-GB', { 
+        setTime(now.toLocaleTimeString('en-US', { 
           timeZone: 'Asia/Jakarta', 
           hour: '2-digit', 
           minute: '2-digit',
           second: '2-digit',
-          hour12: false 
+          hour12: true 
         }))
       } else {
-        // English: 12-hour format for UTC
         setTime(now.toLocaleTimeString('en-US', { 
           timeZone: 'UTC', 
           hour: '2-digit', 
@@ -190,26 +168,22 @@ function ThemeToggle() {
   }, [])
 
   const toggleTheme = useCallback(() => {
-    // Toggle between Gaming Mode (dark) and Biasa Mode (light - white)
     setTheme(theme === 'dark' ? 'light' : 'dark')
   }, [theme, setTheme])
-
-  const isGamingMode = theme === 'dark'
 
   return (
     <Button 
       variant="outline" 
       size="sm" 
-      className={`w-10 h-10 p-0 pixel-button ${isGamingMode ? 'border-3 border-[#ffd700] bg-[#12121a] hover:bg-[#ffd700]/20' : 'border border-border bg-card hover:bg-muted'}`}
+      className="w-10 h-10 p-0 border-3 border-[#ffd700] bg-[#12121a] hover:bg-[#ffd700]/20 pixel-button"
       onClick={toggleTheme}
-      title={isGamingMode ? 'Switch to Normal Mode' : 'Switch to Gaming Mode'}
     >
       {!mounted ? (
-        <Gamepad2 className="w-5 h-5 text-[#ffd700]" />
-      ) : isGamingMode ? (
-        <Gamepad2 className="w-5 h-5 text-[#ffd700] pulse-neon" />
+        <Sun className="w-5 h-5 text-[#ffd700]" />
+      ) : theme === 'dark' ? (
+        <Sun className="w-5 h-5 text-[#ffd700] pulse-neon" />
       ) : (
-        <Moon className="w-5 h-5 text-foreground" />
+        <Moon className="w-5 h-5 text-[#ff00ff]" />
       )}
     </Button>
   )
@@ -271,16 +245,16 @@ function RoleSystemModal({ open, onOpenChange }: { open: boolean; onOpenChange: 
                   <div className="flex items-center gap-3">
                     {role.emoji && <span className="text-2xl float">{role.emoji}</span>}
                     <div className="flex-1">
-                      <h4 className="text-xs font-pixel" style={{ color: role.color, textShadow: `0 0 10px ${role.color}, 0 0 20px ${role.color}40` }}>
+                      <h4 className="text-xs font-pixel" style={{ color: role.color }}>
                         {role.name}
                       </h4>
                       <div className="mt-1 text-base">
                         <span className="text-[#8888aa]">{t('requirements')}: </span>
-                        <span className="text-[#b8b8c8]">{role.requirements}</span>
+                        <span>{role.requirements}</span>
                       </div>
                       <div className="text-base">
                         <span className="text-[#8888aa]">{t('perks')}: </span>
-                        <span className="text-[#b8b8c8]">{role.perks}</span>
+                        <span>{role.perks}</span>
                       </div>
                     </div>
                   </div>
@@ -291,15 +265,15 @@ function RoleSystemModal({ open, onOpenChange }: { open: boolean; onOpenChange: 
 
           {/* Functional Roles */}
           <section>
-            <h3 className="text-[10px] font-pixel mb-3 flex items-center gap-2 neon-text-cyan">
+            <h3 className="text-[10px] font-pixel mb-3 flex items-center gap-2 neon-text-lime">
               <Shield className="w-4 h-4" />
               {t('functionalRoles')}
             </h3>
             <div className="grid grid-cols-2 gap-2">
               {functionalRoles.map((role) => (
-                <div key={role.name} className="p-2 border-3 border-[#2a2a4e] bg-[#12121a] hover:border-[#00fff7] transition-colors">
-                  <h4 className="text-xs font-pixel text-[#00fff7]">{role.name}</h4>
-                  <p className="text-sm text-[#b8b8c8]">{role.requirements}</p>
+                <div key={role.name} className="p-2 border-3 border-[#2a2a4e] bg-[#12121a] hover:border-[#39ff14] transition-colors">
+                  <h4 className="text-xs font-pixel text-[#39ff14]">{role.name}</h4>
+                  <p className="text-sm text-[#8888aa]">{role.requirements}</p>
                 </div>
               ))}
             </div>
@@ -314,48 +288,12 @@ function RoleSystemModal({ open, onOpenChange }: { open: boolean; onOpenChange: 
             <div className="grid grid-cols-2 gap-2">
               {xpPoapSources.map((source) => (
                 <div key={source.source} className="flex items-center justify-between p-2 border-3 border-[#2a2a4e] bg-[#12121a]">
-                  <span className="text-sm text-[#b8b8c8]">{source.source}</span>
+                  <span className="text-sm">{source.source}</span>
                   <div className="flex gap-1">
                     {source.xp && <span className="text-[10px] px-2 py-0.5 border-2 border-[#39ff14] text-[#39ff14] font-pixel">XP</span>}
                     {source.poap && <span className="text-[10px] px-2 py-0.5 border-2 border-[#ff00ff] text-[#ff00ff] font-pixel">POAP</span>}
                   </div>
                 </div>
-              ))}
-            </div>
-          </section>
-
-          {/* Monthly Contributor Highlights */}
-          <section>
-            <h3 className="text-[10px] font-pixel mb-3 flex items-center gap-2 neon-text-cyan">
-              <Star className="w-4 h-4" />
-              {t('monthlyContributor')}
-            </h3>
-            <div className="space-y-2">
-              {monthlyContributorHighlights.map((highlight, index) => (
-                <motion.div
-                  key={highlight.category}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="p-3 border-3 border-[#2a2a4e] bg-[#12121a] hover:border-[#ff00ff] transition-colors"
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-pixel text-[#ff00ff]">{highlight.category}</span>
-                    <span className="text-[10px] font-pixel text-[#ffd700]">
-                      {t('rank')} #{index + 1}
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap gap-1">
-                    {highlight.rewards.map((reward, idx) => (
-                      <span 
-                        key={idx}
-                        className="text-xs px-2 py-0.5 bg-[#1a1a2e] text-[#00fff7] border border-[#2a2a4e]"
-                      >
-                        {reward}
-                      </span>
-                    ))}
-                  </div>
-                </motion.div>
               ))}
             </div>
           </section>
@@ -371,10 +309,32 @@ function RoleSystemModal({ open, onOpenChange }: { open: boolean; onOpenChange: 
                 {importantNotes.map((note, idx) => (
                   <li key={idx} className="flex items-start gap-2 text-sm">
                     <span className="text-[#ffd700] font-pixel">&gt;</span>
-                    <span className="text-[#b8b8c8]">{note}</span>
+                    <span>{note}</span>
                   </li>
                 ))}
               </ul>
+            </div>
+          </section>
+
+          {/* Important Links */}
+          <section>
+            <h3 className="text-[10px] font-pixel mb-3 neon-text-cyan flex items-center gap-2">
+              <ExternalLink className="w-4 h-4" />
+              {t('importantLinks')}
+            </h3>
+            <div className="grid grid-cols-2 gap-2">
+              {importantLinks.map((link) => (
+                <a
+                  key={link.name}
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2 border-3 border-[#2a2a4e] bg-[#12121a] hover:border-[#00fff7] hover:bg-[#00fff7]/10 transition-all block pixel-button"
+                >
+                  <span className="text-xs font-pixel text-[#00fff7]">{link.name}</span>
+                  <p className="text-[10px] text-[#8888aa] mt-1">{link.description}</p>
+                </a>
+              ))}
             </div>
           </section>
         </div>
@@ -462,13 +422,6 @@ function EventDetailModal({
             </span>
           </div>
 
-          {/* Description */}
-          {event.description && (
-            <div className="p-3 border-3 border-[#2a2a4e] bg-[#0a0a0f]">
-              <p className="text-sm text-[#b0b0c0] leading-relaxed">{event.description}</p>
-            </div>
-          )}
-
           {/* Tags */}
           {(event.hasPOAP || event.hasInsight || (event.rewards && event.rewards.length > 0)) && (
             <div className="flex flex-wrap gap-2">
@@ -494,7 +447,7 @@ function EventDetailModal({
                   {t('xpRewards')}
                 </h4>
                 <span className="text-xs font-pixel text-[#ffd700] neon-text-gold">
-                  MAX: {maxXP.toLocaleString('en-US')} XP
+                  MAX: {maxXP.toLocaleString()} XP
                 </span>
               </div>
               <div className="p-2 border-3 border-[#2a2a4e] bg-[#0a0a0f] max-h-40 overflow-y-auto custom-scrollbar">
@@ -503,7 +456,7 @@ function EventDetailModal({
                     <div key={idx} className="flex items-center justify-between text-sm p-1 hover:bg-[#39ff14]/10">
                       <span className="text-[#8888aa]">{reward.position}</span>
                       <span className="font-bold text-[#39ff14]">
-                        {reward.xp > 0 ? `${reward.xp.toLocaleString('en-US')} XP` : 'XP'}
+                        {reward.xp > 0 ? `${reward.xp.toLocaleString()} XP` : 'XP'}
                       </span>
                     </div>
                   ))}
@@ -548,252 +501,6 @@ function EventDetailModal({
   )
 }
 
-function AlarmListModal({ 
-  open, 
-  onOpenChange,
-  alarmedEvents,
-  onRemoveAlarm,
-  onClearAll
-}: { 
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  alarmedEvents: Event[]
-  onRemoveAlarm: (eventId: string) => void
-  onClearAll: () => void
-}) {
-  const { t, formatTimeWithLabel } = useLanguage()
-  const getDayName = useDayName()
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md max-h-[80vh] overflow-hidden flex flex-col">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-3 text-[10px] neon-text-gold font-pixel">
-            <div className="w-8 h-8 border-2 border-[#39ff14] bg-[#12121a] flex items-center justify-center">
-              <BellRing className="w-5 h-5 text-[#39ff14] animate-pulse" />
-            </div>
-            {t('alarmList')} ({alarmedEvents.length})
-          </DialogTitle>
-        </DialogHeader>
-
-        <div className="flex-1 overflow-y-auto custom-scrollbar mt-4 space-y-2">
-          {alarmedEvents.length === 0 ? (
-            <div className="text-center py-8 text-[#8888aa]">
-              <Bell className="w-12 h-12 mx-auto mb-3 opacity-30" />
-              <p className="text-sm">{t('noAlarms')}</p>
-            </div>
-          ) : (
-            <>
-              {alarmedEvents.map(event => (
-                <motion.div 
-                  key={event.id}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="flex items-center gap-3 p-3 border-3 border-[#2a2a4e] bg-[#12121a] hover:border-[#39ff14] transition-colors"
-                >
-                  {event.icon && (
-                    <img 
-                      src={event.icon} 
-                      alt={event.name}
-                      className="w-10 h-10 border-2 border-[#00fff7]"
-                      style={{ imageRendering: 'pixelated' }}
-                    />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-xs font-pixel text-[#00fff7] truncate">{event.name}</h4>
-                    <div className="flex items-center gap-2 text-[10px] text-[#8888aa] mt-1">
-                      <span className="text-[#ff00ff]">{getDayName(event.day)}</span>
-                      <span>•</span>
-                      <span className="text-[#00fff7]">{formatTimeWithLabel(event.timeUTC)}</span>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => onRemoveAlarm(event.id)}
-                    className="p-2 border-2 border-[#ff0040] text-[#ff0040] hover:bg-[#ff0040]/20 transition-colors"
-                    title={t('removeAlarm')}
-                  >
-                    <span className="text-lg font-bold">×</span>
-                  </button>
-                </motion.div>
-              ))}
-            </>
-          )}
-        </div>
-
-        {alarmedEvents.length > 0 && (
-          <div className="pt-4 border-t-2 border-[#2a2a4e] mt-4">
-            <Button
-              variant="outline"
-              className="w-full border-2 border-[#ff0040] text-[#ff0040] hover:bg-[#ff0040]/20 font-pixel text-xs"
-              onClick={onClearAll}
-            >
-              {t('clearAllAlarms')}
-            </Button>
-          </div>
-        )}
-      </DialogContent>
-    </Dialog>
-  )
-}
-
-function AlarmAlert({ message, onClose }: { message: string; onClose: () => void }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.5 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.5 }}
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80"
-      onClick={onClose}
-    >
-      <motion.div 
-        className="relative border-4 border-[#39ff14] bg-[#0a0a0f] p-8 max-w-md mx-4 text-center"
-        animate={{ 
-          boxShadow: [
-            '0 0 20px #39ff14, 0 0 40px #39ff14',
-            '0 0 40px #39ff14, 0 0 80px #39ff14',
-            '0 0 20px #39ff14, 0 0 40px #39ff14'
-          ]
-        }}
-        transition={{ duration: 0.5, repeat: Infinity }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Corner decorations */}
-        <div className="absolute top-0 left-0 w-4 h-4 bg-[#39ff14]" />
-        <div className="absolute top-0 right-0 w-4 h-4 bg-[#39ff14]" />
-        <div className="absolute bottom-0 left-0 w-4 h-4 bg-[#39ff14]" />
-        <div className="absolute bottom-0 right-0 w-4 h-4 bg-[#39ff14]" />
-        
-        {/* Animated bell */}
-        <motion.div
-          animate={{ rotate: [0, -15, 15, -10, 10, 0] }}
-          transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 1 }}
-          className="mb-4"
-        >
-          <BellRing className="w-16 h-16 mx-auto text-[#39ff14]" />
-        </motion.div>
-        
-        <h2 className="text-lg font-pixel text-[#39ff14] mb-2">🔔 ALARM!</h2>
-        <p className="text-sm text-[#b8b8c8] whitespace-pre-line mb-6">{message}</p>
-        
-        <Button
-          className="bg-[#39ff14] text-[#0a0a0f] font-pixel hover:bg-[#39ff14]/80"
-          onClick={onClose}
-        >
-          TUTUP
-        </Button>
-      </motion.div>
-    </motion.div>
-  )
-}
-
-// Discord-style Toast Notification at bottom-right corner
-interface ToastNotificationProps {
-  title: string
-  message: string
-  icon?: string
-  onClick?: () => void
-  onClose: () => void
-  duration?: number
-}
-
-function ToastNotification({ title, message, icon, onClick, onClose, duration = 8000 }: ToastNotificationProps) {
-  const [progress, setProgress] = useState(100)
-  const [isPaused, setIsPaused] = useState(false)
-  const onCloseRef = useRef(onClose)
-  
-  // Keep onClose ref updated
-  useEffect(() => {
-    onCloseRef.current = onClose
-  }, [onClose])
-  
-  useEffect(() => {
-    if (isPaused) return
-    
-    const startTime = Date.now()
-    const interval = setInterval(() => {
-      const elapsed = Date.now() - startTime
-      const remaining = Math.max(0, 100 - (elapsed / duration) * 100)
-      setProgress(remaining)
-      
-      if (remaining <= 0) {
-        clearInterval(interval)
-        onCloseRef.current()
-      }
-    }, 50)
-    
-    return () => clearInterval(interval)
-  }, [duration, isPaused])
-  
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: 100, scale: 0.9 }}
-      animate={{ opacity: 1, x: 0, scale: 1 }}
-      exit={{ opacity: 0, x: 100, scale: 0.9 }}
-      transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-      className="fixed bottom-4 right-4 z-[10001] w-80 pointer-events-auto"
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
-    >
-      <div 
-        className="relative bg-[#2f3136] rounded-md shadow-2xl cursor-pointer overflow-hidden border-l-4 border-[#39ff14]"
-        style={{ boxShadow: '0 8px 16px rgba(0,0,0,0.5)' }}
-        onClick={() => {
-          onClick?.()
-          onCloseRef.current()
-        }}
-      >
-        {/* Progress bar at bottom */}
-        <div 
-          className="absolute bottom-0 left-0 h-0.5 bg-[#39ff14] transition-all duration-100"
-          style={{ width: `${progress}%` }}
-        />
-        
-        <div className="flex items-start gap-3 p-3">
-          {/* Avatar/Icon */}
-          <div className="flex-shrink-0">
-            {icon ? (
-              <img src={icon} alt="" className="w-10 h-10 rounded-full border-2 border-[#39ff14]" style={{ imageRendering: 'pixelated' }} />
-            ) : (
-              <div className="w-10 h-10 rounded-full bg-[#39ff14] flex items-center justify-center">
-                <BellRing className="w-5 h-5 text-[#0a0a0f]" />
-              </div>
-            )}
-          </div>
-          
-          {/* Content */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-[#39ff14]">GenLayer Event</span>
-                <span className="text-[10px] text-[#72767d]">•</span>
-                <span className="text-[10px] text-[#72767d]">Just now</span>
-              </div>
-              <button 
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onCloseRef.current()
-                }}
-                className="text-[#72767d] hover:text-white transition-colors p-0.5 hover:bg-[#36393f] rounded"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <h4 className="text-sm font-semibold text-white mt-0.5">{title}</h4>
-            <p className="text-xs text-[#dcddde] mt-0.5 line-clamp-2">{message}</p>
-          </div>
-        </div>
-        
-        {/* Click hint */}
-        <div className="px-3 pb-2 text-[10px] text-[#72767d]">
-          Click to open
-        </div>
-      </div>
-    </motion.div>
-  )
-}
-
 function Notification({ message, onClose }: { message: string; onClose: () => void }) {
   return (
     <motion.div
@@ -819,6 +526,17 @@ function Notification({ message, onClose }: { message: string; onClose: () => vo
 function AppContent() {
   const { t, language, formatTimeWithLabel } = useLanguage()
   const getDayName = useDayName()
+  const { theme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+  const [pressStartComplete, setPressStartComplete] = useState(false)
+  
+  // Prevent hydration mismatch
+  useIsomorphicLayoutEffect(() => {
+    setMounted(true)
+  }, [])
+  
+  // Gaming mode is dark theme, Biasa mode is light theme
+  const isGamingMode = mounted && theme === 'dark'
   
   const [selectedDay, setSelectedDay] = useState<string>(getCurrentUTCDay())
   const [alarmedEvents, setAlarmedEvents] = useState<Set<string>>(new Set())
@@ -827,14 +545,6 @@ function AppContent() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null)
   const [eventDetailOpen, setEventDetailOpen] = useState(false)
   const [notification, setNotification] = useState<string | null>(null)
-  const [alarmAlert, setAlarmAlert] = useState<string | null>(null)
-  const [demoMode, setDemoMode] = useState(false)
-  const [liveEvents, setLiveEvents] = useState<Event[]>([])
-  const [manualLiveEvent, setManualLiveEvent] = useState<Event | null>(null)
-  const [alarmListOpen, setAlarmListOpen] = useState(false)
-  const [isClient, setIsClient] = useState(false)
-  const [backgroundTestCountdown, setBackgroundTestCountdown] = useState<number | null>(null)
-  const [toastData, setToastData] = useState<{ title: string; message: string; icon?: string; eventId?: string } | null>(null)
 
   const currentTime = useCurrentTime()
   const nextEvent = getNextEvent()
@@ -843,162 +553,6 @@ function AppContent() {
   const todayEvents = getTodayEvents()
 
   const alarmEnabled = alarmedEvents.size > 0
-  const alarmsLoadedRef = useRef(false)
-
-  // Set client mount state
-  useIsomorphicLayoutEffect(() => {
-    setIsClient(true)
-  }, [])
-
-  // Register Service Worker for background notifications
-  useEffect(() => {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js')
-        .then((registration) => {
-          console.log('[SW] Service Worker registered:', registration.scope)
-        })
-        .catch((error) => {
-          console.log('[SW] Service Worker registration failed:', error)
-        })
-    }
-  }, [])
-
-  // Load alarms from localStorage after hydration (avoid SSR mismatch)
-  useEffect(() => {
-    if (isClient && !alarmsLoadedRef.current) {
-      alarmsLoadedRef.current = true
-      const saved = localStorage.getItem('genlayer-alarms')
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved) as string[]
-          // Only update if there are alarms to load
-          if (parsed.length > 0) {
-            // Defer setState to avoid cascading renders warning
-            setTimeout(() => {
-              setAlarmedEvents(new Set(parsed))
-            }, 0)
-          }
-        } catch { }
-      }
-    }
-  }, [isClient])
-
-  // Get date string only on client to avoid hydration mismatch
-  const currentDateString = isClient 
-    ? new Date().toLocaleDateString('id-ID', { 
-        day: 'numeric', 
-        month: 'short', 
-        year: 'numeric' 
-      })
-    : ''
-
-  // Save alarms to localStorage when changed
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('genlayer-alarms', JSON.stringify([...alarmedEvents]))
-    }
-  }, [alarmedEvents])
-
-  // Update live events every 30 seconds
-  useEffect(() => {
-    const updateLiveEvents = () => {
-      setLiveEvents(getLiveEvents())
-    }
-    updateLiveEvents()
-    const interval = setInterval(updateLiveEvents, 30000)
-    return () => clearInterval(interval)
-  }, [])
-
-  // Request browser notification permission
-  useEffect(() => {
-    if ('Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission()
-    }
-  }, [])
-
-  // Function to show browser notification with sound - works even when tab is in background
-  const showBrowserNotification = useCallback(async (title: string, body: string, eventIcon?: string, eventId?: string, skipModal?: boolean) => {
-    console.log('[Alarm] showBrowserNotification called:', title, body)
-    
-    // Play alarm sound using Web Audio API (multiple beeps for attention)
-    try {
-      const playBeep = (freq: number, duration: number, delay: number) => {
-        setTimeout(() => {
-          try {
-            const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
-            if (audioContext.state === 'suspended') {
-              audioContext.resume()
-            }
-            const oscillator = audioContext.createOscillator()
-            const gainNode = audioContext.createGain()
-            oscillator.connect(gainNode)
-            gainNode.connect(audioContext.destination)
-            oscillator.frequency.value = freq
-            oscillator.type = 'square' // More attention-grabbing
-            gainNode.gain.value = 0.5
-            oscillator.start()
-            oscillator.stop(audioContext.currentTime + duration)
-          } catch (e) {}
-        }, delay)
-      }
-      
-      // Play 5 beeps with increasing frequency
-      playBeep(600, 0.15, 0)
-      playBeep(800, 0.15, 200)
-      playBeep(1000, 0.15, 400)
-      playBeep(1200, 0.15, 600)
-      playBeep(1500, 0.3, 800)
-      
-      console.log('[Alarm] Sound played')
-    } catch (e) {
-      console.error('[Alarm] Sound error:', e)
-    }
-
-    // Show Discord-style toast notification at bottom (always visible)
-    console.log('[Alarm] Setting toast data:', { title, body, eventIcon, eventId, skipModal })
-    setToastData({ title, message: body, icon: eventIcon, eventId })
-    console.log('[Alarm] Toast data set!')
-    
-    // Show visual notification on page (always works when tab is visible)
-    setNotification(`${title}\n${body}`)
-    
-    // Show BIG alarm alert only for real events (not for test)
-    if (!skipModal) {
-      setAlarmAlert(`${title}\n\n${body}`)
-    }
-    
-    // Show browser notification - works even when tab is in background
-    try {
-      const notificationOptions = {
-        body: body,
-        icon: eventIcon || '/genlayer-logo.jpg',
-        badge: '/genlayer-logo.jpg',
-        tag: 'genlayer-alarm-' + Date.now(),
-        requireInteraction: true, // Notification stays until user interacts
-        vibrate: [200, 100, 200, 100, 200], // Vibration pattern for mobile
-        renotify: true, // Notify even if tag exists
-        silent: false
-      }
-      
-      // Try to use Service Worker for notifications (works when tab is hidden/closed)
-      if ('serviceWorker' in navigator) {
-        const registration = await navigator.serviceWorker.ready
-        if (registration && registration.showNotification) {
-          await registration.showNotification(title, notificationOptions)
-          console.log('[Alarm] Service Worker notification shown')
-          return
-        }
-      }
-      
-      // Fallback to regular Notification API
-      if ('Notification' in window && Notification.permission === 'granted') {
-        new Notification(title, notificationOptions)
-        console.log('[Alarm] Browser notification shown')
-      }
-    } catch (e) {
-      console.log('[Alarm] Browser notification not available:', e)
-    }
-  }, [])
 
   const toggleEventAlarm = useCallback((eventId: string) => {
     setAlarmedEvents(prev => {
@@ -1006,10 +560,6 @@ function AppContent() {
       if (newSet.has(eventId)) {
         newSet.delete(eventId)
         setNotification(t('notification.removed'))
-        // Remove from LIVE if it was manually set
-        if (manualLiveEvent?.id === eventId) {
-          setManualLiveEvent(null)
-        }
       } else {
         newSet.add(eventId)
         setNotification(t('notification.set'))
@@ -1017,68 +567,15 @@ function AppContent() {
       return newSet
     })
     setTimeout(() => setNotification(null), 3000)
-  }, [t, manualLiveEvent])
+  }, [t])
 
-  // Start background test alarm (fires after X seconds, even if tab is hidden)
-  const startBackgroundTest = useCallback((seconds: number) => {
-    setBackgroundTestCountdown(seconds)
-    
-    // Use setTimeout that will fire even when tab is in background
-    // Modern browsers throttle setTimeout but still execute it
-    const timeoutId = setTimeout(() => {
-      showBrowserNotification(
-        '🔔 Test Background Alarm',
-        `Notifikasi muncul setelah ${seconds} detik! Alarm bekerja meski tab di background.`,
-        undefined,
-        undefined,
-        true // Skip big modal, only show toast
-      )
-      setBackgroundTestCountdown(null)
-    }, seconds * 1000)
-    
-    // Store timeout ID so we can cancel if needed
-    return () => {
-      clearTimeout(timeoutId)
-      setBackgroundTestCountdown(null)
-    }
-  }, [showBrowserNotification])
-
-  // Countdown display for background test
   useEffect(() => {
-    if (backgroundTestCountdown === null || backgroundTestCountdown <= 0) return
-    
-    const interval = setInterval(() => {
-      setBackgroundTestCountdown(prev => {
-        if (prev === null || prev <= 1) {
-          return null
-        }
-        return prev - 1
-      })
-    }, 1000)
-    
-    return () => clearInterval(interval)
-  }, [backgroundTestCountdown !== null])
-
-  // In demo mode, clicking event sets it as LIVE
-  const handleEventClick = useCallback((event: Event) => {
-    if (demoMode) {
-      setManualLiveEvent(event)
-      // Also add to alarmed events
-      setAlarmedEvents(prev => new Set(prev).add(event.id))
-    }
-    setSelectedEvent(event)
-    setEventDetailOpen(true)
-  }, [demoMode])
-
-  // Live alarm system
-  useEffect(() => {
-    if (alarmedEvents.size === 0 || demoMode) return
+    if (alarmedEvents.size === 0) return
 
     const checkNotifications = () => {
       const now = new Date()
       const currentDay = DAYS[new Date().getUTCDay()]
       const nowMinutes = now.getUTCHours() * 60 + now.getUTCMinutes()
-      const nowSeconds = now.getUTCSeconds()
 
       events.forEach(event => {
         if (!alarmedEvents.has(event.id)) return
@@ -1087,85 +584,25 @@ function AppContent() {
         const [hours, minutes] = event.timeUTC.split(':').map(Number)
         const eventMinutes = hours * 60 + minutes
         const minutesUntil = eventMinutes - nowMinutes
-        
-        // Create unique notification ID for this event + day
-        const notificationId = `${event.id}-${currentDay}`
-        
-        // Notify 5 minutes before
-        if (minutesUntil === 5 && !notifiedEvents.has(`${notificationId}-5min`)) {
-          const message = `[${event.name}] akan dimulai dalam 5 menit!`
-          setNotification(message)
-          showBrowserNotification(
-            `🔔 ${event.name}`,
-            `Event dimulai dalam 5 menit!`,
-            event.icon,
-            event.id
-          )
-          setNotifiedEvents(prev => new Set(prev).add(`${notificationId}-5min`))
-          setTimeout(() => setNotification(null), 10000)
-        }
-        
-        // Notify 1 minute before
-        if (minutesUntil === 1 && !notifiedEvents.has(`${notificationId}-1min`)) {
-          const message = `[${event.name}] akan dimulai dalam 1 menit!`
-          setNotification(message)
-          showBrowserNotification(
-            `🔔 ${event.name}`,
-            `Event dimulai dalam 1 menit!`,
-            event.icon,
-            event.id
-          )
-          setNotifiedEvents(prev => new Set(prev).add(`${notificationId}-1min`))
-          setTimeout(() => setNotification(null), 10000)
-        }
-        
-        // Notify when event starts
-        if (minutesUntil === 0 && nowSeconds < 30 && !notifiedEvents.has(`${notificationId}-start`)) {
-          const message = `[${event.name}] sudah dimulai!`
-          setNotification(message)
-          showBrowserNotification(
-            `🔴 ${event.name}`,
-            `Event sudah dimulai! Ayo gabung sekarang!`,
-            event.icon,
-            event.id
-          )
-          setNotifiedEvents(prev => new Set(prev).add(`${notificationId}-start`))
+
+        if (minutesUntil <= 5 && minutesUntil > 0 && !notifiedEvents.has(event.id)) {
+          const minuteText = minutesUntil === 1 ? t('minute') : t('minutes')
+          setNotification(`[${event.name}] ${t('notification.startsIn')} ${minutesUntil} ${minuteText}!`)
+          setNotifiedEvents(prev => new Set(prev).add(event.id))
           setTimeout(() => setNotification(null), 10000)
         }
       })
     }
 
     checkNotifications()
-    const interval = setInterval(checkNotifications, 10000) // Check every 10 seconds
+    const interval = setInterval(checkNotifications, 30000)
     return () => clearInterval(interval)
-  }, [alarmedEvents, notifiedEvents, t, demoMode, showBrowserNotification])
-
-  // Reset notified events at midnight (when day changes)
-  useEffect(() => {
-    const lastDayRef = { current: getCurrentUTCDay() }
-    
-    const checkDayChange = () => {
-      const currentDay = getCurrentUTCDay()
-      if (currentDay !== lastDayRef.current) {
-        lastDayRef.current = currentDay
-        setNotifiedEvents(new Set()) // Reset notifications for new day
-      }
-    }
-    
-    const interval = setInterval(checkDayChange, 60000) // Check every minute
-    return () => clearInterval(interval)
-  }, [])
+  }, [alarmedEvents, notifiedEvents, t])
 
   const openEventDetail = useCallback((event: Event) => {
-    // In demo mode, clicking event sets it as LIVE
-    if (demoMode) {
-      setManualLiveEvent(event)
-      // Also add to alarmed events
-      setAlarmedEvents(prev => new Set(prev).add(event.id))
-    }
     setSelectedEvent(event)
     setEventDetailOpen(true)
-  }, [demoMode])
+  }, [])
 
   const getMaxXP = (event: Event): number => {
     return event.xpRewards.length > 0 
@@ -1173,31 +610,20 @@ function AppContent() {
       : 0
   }
 
-  // Get alarmed events as Event objects
-  const getAlarmedEventObjects = (): Event[] => {
-    return events.filter(e => alarmedEvents.has(e.id))
+  // Show PressStart in Gaming Mode until complete
+  if (isGamingMode && !pressStartComplete) {
+    return <PressStart onComplete={() => setPressStartComplete(true)} />
   }
 
-  // Remove single alarm
-  const removeAlarm = useCallback((eventId: string) => {
-    setAlarmedEvents(prev => {
-      const newSet = new Set(prev)
-      newSet.delete(eventId)
-      return newSet
-    })
-  }, [])
-
-  // Clear all alarms
-  const clearAllAlarms = useCallback(() => {
-    setAlarmedEvents(new Set())
-    setAlarmListOpen(false)
-  }, [])
-
   return (
-    <div className="min-h-screen flex flex-col bg-[#0a0a0f] text-[#e0e0e0] retro-grid relative crt">
-      {/* Animated pixel decorations */}
-      <div className="fixed top-0 left-0 w-full h-1 bg-gradient-to-r from-[#00fff7] via-[#ff00ff] to-[#39ff14] opacity-50 z-50" />
-      <div className="fixed bottom-0 left-0 w-full h-1 bg-gradient-to-r from-[#39ff14] via-[#ff00ff] to-[#00fff7] opacity-50 z-50" />
+    <div className={`min-h-screen flex flex-col bg-background text-foreground relative ${isGamingMode ? 'retro-grid crt' : ''}`}>
+      {/* Animated pixel decorations - only in Gaming Mode */}
+      {isGamingMode && (
+        <>
+          <div className="fixed top-0 left-0 w-full h-1 bg-gradient-to-r from-[#00fff7] via-[#ff00ff] to-[#39ff14] opacity-50 z-50" />
+          <div className="fixed bottom-0 left-0 w-full h-1 bg-gradient-to-r from-[#39ff14] via-[#ff00ff] to-[#00fff7] opacity-50 z-50" />
+        </>
+      )}
 
       <AnimatePresence>
         {notification && (
@@ -1205,105 +631,55 @@ function AppContent() {
         )}
       </AnimatePresence>
 
-      {/* Big Alarm Alert */}
-      <AnimatePresence>
-        {alarmAlert && (
-          <AlarmAlert message={alarmAlert} onClose={() => setAlarmAlert(null)} />
-        )}
-      </AnimatePresence>
-
-      {/* Discord-style Toast Notification at bottom */}
-      <AnimatePresence mode="wait">
-        {toastData && (
-          <ToastNotification 
-            key="toast-notification"
-            title={toastData.title}
-            message={toastData.message}
-            icon={toastData.icon}
-            onClick={() => {
-              // If eventId provided, open event detail
-              if (toastData?.eventId) {
-                const event = events.find(e => e.id === toastData.eventId)
-                if (event) {
-                  openEventDetail(event)
-                }
-              }
-            }}
-            onClose={() => {
-              console.log('[Toast] Closing toast')
-              setToastData(null)
-            }}
-          />
-        )}
-      </AnimatePresence>
-
       {/* Header */}
-      <header className="sticky top-0 z-40 border-b-4 border-[#00fff7] bg-[#0a0a0f]/95 backdrop-blur-sm relative">
-        <PixelDecoration className="top-2 left-4" />
-        <PixelDecoration className="top-2 right-4" />
+      <header className={`sticky top-0 z-40 backdrop-blur-sm relative ${isGamingMode ? 'border-b-4 border-[#00fff7] bg-[#0a0a0f]/95' : 'border-b border-border bg-card/95'}`}>
+        {isGamingMode && (
+          <>
+            <PixelDecoration className="top-2 left-4" />
+            <PixelDecoration className="top-2 right-4" />
+          </>
+        )}
         
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 border-3 border-[#00fff7] bg-[#12121a] flex items-center justify-center pixel-shadow relative overflow-hidden">
-                <img 
-                  src="/genlayer-logo.jpg" 
-                  alt="GenLayer" 
-                  className="w-10 h-10 object-contain"
-                />
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-[#39ff14] animate-pulse" />
+              <div className={`w-12 h-12 flex items-center justify-center relative ${isGamingMode ? 'border-3 border-[#00fff7] bg-[#12121a] pixel-shadow' : 'border border-border bg-card rounded-lg'}`}>
+                <Bell className={`w-6 h-6 ${isGamingMode ? 'text-[#00fff7] pulse-neon' : 'text-primary'}`} />
+                {isGamingMode && <div className="absolute -top-1 -right-1 w-3 h-3 bg-[#39ff14] animate-pulse" />}
               </div>
               <div>
-                <h1 className="text-[10px] font-pixel neon-text-cyan glitch" data-text={t('app.title')}>
+                <h1 className={`text-[10px] ${isGamingMode ? 'font-pixel neon-text-cyan glitch' : 'font-semibold text-foreground'}`} data-text={t('app.title')}>
                   {t('app.title')}
                 </h1>
+                <p className={`text-sm mt-1 ${isGamingMode ? 'text-[#8888aa]' : 'text-muted-foreground'}`}>{t('app.subtitle')}</p>
               </div>
             </div>
 
             <div className="flex items-center gap-2">
               {/* Clock Display */}
-              <div className="hidden sm:flex flex-col items-center px-3 py-1 border-3 border-[#2a2a4e] bg-[#12121a]">
-                <div className="flex items-center gap-2">
-                  <Clock className="w-3 h-3 text-[#00fff7]" />
-                  <span className="text-xs font-mono text-[#00fff7]">{currentTime}</span>
-                  <span className="text-[8px] font-pixel text-[#ff00ff]">{language === 'id' ? 'WIB' : 'UTC'}</span>
-                </div>
-                <span className="text-[8px] font-pixel text-[#8888aa]">
-                  {currentDateString || 'Loading...'}
-                </span>
+              <div className={`hidden sm:flex items-center gap-2 px-4 py-2 ${isGamingMode ? 'border-3 border-[#2a2a4e] bg-[#12121a]' : 'border border-border bg-card rounded-md'}`}>
+                <Clock className={`w-4 h-4 ${isGamingMode ? 'text-[#00fff7]' : 'text-primary'}`} />
+                <span className={`text-sm font-mono ${isGamingMode ? 'text-[#00fff7]' : 'text-foreground'}`}>{currentTime}</span>
+                <span className={`text-[10px] ${isGamingMode ? 'font-pixel text-[#ff00ff]' : 'text-muted-foreground'}`}>{language === 'id' ? 'WIB' : 'UTC'}</span>
               </div>
 
-              {isClient && alarmEnabled && (
-                <button
-                  onClick={() => setAlarmListOpen(true)}
-                  className="flex items-center gap-1 text-[10px] px-3 py-2 border-3 border-[#39ff14] text-[#39ff14] bg-[#39ff14]/10 font-pixel hover:bg-[#39ff14]/30 transition-colors cursor-pointer"
-                >
+              {alarmEnabled && (
+                <div className={`flex items-center gap-1 text-[10px] px-3 py-2 ${isGamingMode ? 'border-3 border-[#39ff14] text-[#39ff14] bg-[#39ff14]/10 font-pixel' : 'border border-green-500 text-green-600 bg-green-50 rounded-md'}`}>
                   <BellRing className="w-4 h-4 animate-pulse" />
                   <span>{alarmedEvents.size}</span>
-                </button>
+                </div>
               )}
-
-              {/* Demo Mode Button */}
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className={`gap-1.5 border-3 font-pixel text-xs pixel-button ${demoMode ? 'border-[#ff0040] bg-[#ff0040]/20 text-[#ff0040]' : 'border-[#8888aa] bg-[#12121a] text-[#8888aa]'}`}
-                onClick={() => setDemoMode(!demoMode)}
-              >
-                <Zap className="w-4 h-4" />
-                <span className="hidden sm:inline">DEMO</span>
-              </Button>
 
               <LanguageToggle />
 
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="gap-1.5 border-3 border-[#ffd700] bg-[#12121a] hover:bg-[#ffd700]/20 pixel-button"
+                className={`gap-1.5 ${isGamingMode ? 'border-3 border-[#ffd700] bg-[#12121a] hover:bg-[#ffd700]/20 pixel-button' : 'border border-border bg-card hover:bg-muted'}`}
                 onClick={() => setRoleModalOpen(true)}
               >
-                <Users className="w-4 h-4 text-[#ffd700]" />
-                <span className="hidden sm:inline text-[10px] font-pixel text-[#ffd700]">{t('roles')}</span>
+                <Users className={`w-4 h-4 ${isGamingMode ? 'text-[#ffd700]' : 'text-foreground'}`} />
+                <span className={`hidden sm:inline text-[10px] ${isGamingMode ? 'font-pixel text-[#ffd700]' : ''}`}>{t('roles')}</span>
               </Button>
 
               <ThemeToggle />
@@ -1311,297 +687,13 @@ function AppContent() {
           </div>
 
           {/* Mobile Clock */}
-          <div className="flex sm:hidden flex-col items-start mt-2 px-2 py-1 border-3 border-[#2a2a4e] bg-[#12121a] w-fit">
-            <div className="flex items-center gap-2">
-              <Clock className="w-3 h-3 text-[#00fff7]" />
-              <span className="text-xs font-mono text-[#00fff7]">{currentTime}</span>
-              <span className="text-[8px] font-pixel text-[#ff00ff]">{language === 'id' ? 'WIB' : 'UTC'}</span>
-            </div>
-            <span className="text-[8px] font-pixel text-[#8888aa]">
-              {currentDateString || 'Loading...'}
-            </span>
+          <div className={`flex sm:hidden items-center gap-2 mt-3 px-3 py-2 w-fit ${isGamingMode ? 'border-3 border-[#2a2a4e] bg-[#12121a]' : 'border border-border bg-card rounded-md'}`}>
+            <Clock className={`w-4 h-4 ${isGamingMode ? 'text-[#00fff7]' : 'text-primary'}`} />
+            <span className={`text-sm font-mono ${isGamingMode ? 'text-[#00fff7]' : 'text-foreground'}`}>{currentTime}</span>
+            <span className={`text-[10px] ${isGamingMode ? 'font-pixel text-[#ff00ff]' : 'text-muted-foreground'}`}>{language === 'id' ? 'WIB' : 'UTC'}</span>
           </div>
         </div>
       </header>
-
-      {/* Demo Mode Banner */}
-      {demoMode && (
-        <motion.div 
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-[#ff0040]/20 border-b-4 border-[#ff0040] px-4 py-3"
-        >
-          <div className="max-w-4xl mx-auto">
-            {/* Sandbox Warning - Show if notifications not available */}
-            {typeof Notification === 'undefined' || typeof Notification.requestPermission !== 'function' ? (
-              <div className="mb-3 p-3 bg-[#ffd700]/20 border-2 border-[#ffd700]">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-sm">⚠️</span>
-                  <span className="text-[10px] font-pixel text-[#ffd700]">MODE PREVIEW - NOTIFIKASI TERBATAS</span>
-                </div>
-                <p className="text-[10px] text-[#b8b8c8] mb-2">
-                  Anda sedang dalam mode preview/sandbox. Notifikasi desktop tidak tersedia.
-                </p>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] text-[#39ff14] font-bold">
-                    👆 Klik tombol "Open in New Tab" di atas preview untuk mengaktifkan notifikasi desktop!
-                  </span>
-                </div>
-              </div>
-            ) : null}
-            
-            {/* Header */}
-            <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
-              <div className="flex items-center gap-3">
-                <Zap className="w-5 h-5 text-[#ff0040] animate-pulse" />
-                <span className="text-sm font-pixel text-[#ff0040]">🧪 DEMO MODE AKTIF</span>
-              </div>
-              <div className="flex items-center gap-3 flex-wrap">
-                {/* Demo Mode Info */}
-                <span className="text-[10px] text-[#8888aa]">
-                  Test notifikasi di sini sebelum event mulai
-                </span>
-              </div>
-            </div>
-            
-            {/* Test Buttons */}
-            <div className="bg-[#0a0a0f] p-3 border-2 border-[#ff0040]/50 mb-3">
-              <div className="text-[10px] text-[#ffd700] font-pixel mb-2">🎮 TEST ALARM:</div>
-              <div className="flex flex-wrap gap-2">
-                {/* Instant Test - Toast Only */}
-                <Button
-                  size="sm"
-                  className="text-[10px] px-3 py-2 bg-[#39ff14] text-[#0a0a0f] hover:bg-[#39ff14]/80 font-bold"
-                  onClick={() => {
-                    showBrowserNotification(
-                      '🔔 Test Alarm',
-                      'Notifikasi langsung muncul! Klik untuk test.',
-                      undefined,
-                      undefined,
-                      true // Skip big modal, only show toast
-                    )
-                  }}
-                >
-                  🔔 INSTANT
-                </Button>
-                
-                {/* Background Test Buttons */}
-                <span className="text-[10px] text-[#8888aa] self-center ml-2">Background Test:</span>
-                {[5, 10, 15, 30].map((seconds) => (
-                  <Button
-                    key={seconds}
-                    size="sm"
-                    disabled={backgroundTestCountdown !== null}
-                    className={`text-[10px] px-3 py-2 border-2 font-bold ${
-                      backgroundTestCountdown !== null 
-                        ? 'border-[#8888aa] text-[#8888aa] cursor-not-allowed' 
-                        : 'border-[#00fff7] text-[#00fff7] hover:bg-[#00fff7]/20'
-                    }`}
-                    onClick={() => startBackgroundTest(seconds)}
-                  >
-                    ⏱️ {seconds}s
-                  </Button>
-                ))}
-              </div>
-              
-              {/* Browser Notification Status */}
-              <div className="mt-3 p-3 bg-[#0a0a0f] border-2 border-[#ffd700]/50">
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-pixel text-[#ffd700]">📢 NOTIFIKASI DESKTOP:</span>
-                    {typeof Notification !== 'undefined' && typeof Notification.requestPermission === 'function' ? (
-                      <span className={`text-[10px] px-2 py-0.5 border-2 ${
-                        Notification.permission === 'granted' 
-                          ? 'border-[#39ff14] text-[#39ff14] bg-[#39ff14]/10' 
-                          : Notification.permission === 'denied'
-                          ? 'border-[#ff0040] text-[#ff0040] bg-[#ff0040]/10'
-                          : 'border-[#ffd700] text-[#ffd700] bg-[#ffd700]/10'
-                      }`}>
-                        {Notification.permission === 'granted' ? '✓ AKTIF' : Notification.permission === 'denied' ? '✗ DIBLOKIR' : '? BELUM AKTIF'}
-                      </span>
-                    ) : (
-                      <span className="text-[10px] px-2 py-0.5 border-2 border-[#8888aa] text-[#8888aa]">
-                        ⚠ TIDAK TERSEDIA
-                      </span>
-                    )}
-                  </div>
-                  {typeof Notification !== 'undefined' && typeof Notification.requestPermission === 'function' && Notification.permission !== 'granted' && (
-                    <Button
-                      size="sm"
-                      className="text-[10px] px-3 py-1 bg-[#ffd700] text-[#0a0a0f] hover:bg-[#ffd700]/80 font-bold"
-                      onClick={async () => {
-                        try {
-                          const permission = await Notification.requestPermission()
-                          if (permission === 'granted') {
-                            // Test notification immediately
-                            new Notification('✓ Notifikasi Diaktifkan!', {
-                              body: 'Anda akan menerima alarm event GenLayer!',
-                              icon: '/genlayer-logo.jpg',
-                              badge: '/genlayer-logo.jpg'
-                            })
-                            setNotification('✓ Notifikasi browser diaktifkan!')
-                          } else {
-                            setNotification(`Permission: ${permission}`)
-                          }
-                          setTimeout(() => setNotification(null), 3000)
-                        } catch (e) {
-                          console.error('[Notification] Error:', e)
-                          setNotification('⚠ Notifikasi desktop tidak tersedia di environment ini (sandbox/iframe). Buka di tab baru untuk fitur lengkap.')
-                          setTimeout(() => setNotification(null), 5000)
-                        }
-                      }}
-                    >
-                      🔔 AKTIFKAN NOTIF
-                    </Button>
-                  )}
-                </div>
-                <div className="text-[9px] text-[#8888aa] mt-2">
-                  {typeof Notification === 'undefined' || typeof Notification.requestPermission !== 'function' ? (
-                    <span className="text-[#ffd700]">
-                      ⚠️ Browser Notification tidak tersedia di mode preview/sandbox.
-                      <strong className="text-[#39ff14]"> Buka di tab baru</strong> untuk mengaktifkan notifikasi desktop.
-                    </span>
-                  ) : Notification.permission === 'granted' 
-                    ? '✅ Notifikasi desktop aktif. Alarm akan muncul meski Anda di tab lain!'
-                    : Notification.permission === 'denied'
-                    ? '❌ Notifikasi diblokir. Buka Settings browser → Site Settings → Notifications → Allow'
-                    : '⚠️ Klik tombol di atas untuk mengaktifkan notifikasi desktop'}
-                </div>
-                <div className="text-[9px] text-[#39ff14] mt-1">
-                  💡 <strong>Catatan:</strong> Toast notification (pojok kanan bawah) selalu berfungsi meski di sandbox!
-                </div>
-              </div>
-              
-              {/* Countdown Display */}
-              {backgroundTestCountdown !== null && (
-                <motion.div 
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="mt-3 p-3 bg-[#00fff7]/10 border-2 border-[#00fff7] text-center"
-                >
-                  <div className="text-[10px] text-[#00fff7] font-pixel mb-1">⏰ ALARM DALAM:</div>
-                  <div className="text-3xl font-mono font-bold text-[#00fff7] neon-text-cyan">
-                    {backgroundTestCountdown}
-                  </div>
-                  <div className="text-[10px] text-[#8888aa] mt-1">
-                    💡 Pindah tab/minimize browser sekarang!
-                  </div>
-                </motion.div>
-              )}
-            </div>
-            
-            {/* Tips */}
-            <div className="text-[10px] text-[#b8b8c8] bg-[#0a0a0f]/50 p-2 border-2 border-[#ff0040]/30">
-              <div className="font-bold text-[#ffd700] mb-1">💡 CARA TEST NOTIFIKASI BACKGROUND:</div>
-              <ol className="list-decimal list-inside space-y-0.5">
-                <li>Klik <strong>"🔔 AKTIFKAN NOTIF"</strong> di atas (jika belum aktif)</li>
-                <li>Klik timer <strong>(5s/10s/15s/30s)</strong></li>
-                <li><strong>SEGERA pindah ke tab lain</strong> atau minimize browser</li>
-                <li>Tunggu... <strong>Notifikasi akan muncul di desktop!</strong></li>
-              </ol>
-            </div>
-          </div>
-        </motion.div>
-      )}
-
-      {/* Live Events Banner - Normal Mode */}
-      {liveEvents.length > 0 && !demoMode && (
-        <motion.div 
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-[#ff0040]/20 border-b-4 border-[#ff0040] px-4 py-3"
-        >
-          <div className="max-w-4xl mx-auto">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="flex items-center gap-2 px-3 py-1 bg-[#ff0040] animate-pulse">
-                <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
-                <span className="text-[10px] font-pixel text-white uppercase tracking-wider">LIVE NOW</span>
-              </div>
-              <span className="text-sm text-[#b8b8c8]">{liveEvents.length} event sedang berlangsung</span>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {liveEvents.map(event => (
-                <motion.div
-                  key={event.id}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="flex items-center gap-3 p-2 border-2 border-[#ff0040] bg-[#ff0040]/10 hover:bg-[#ff0040]/20 cursor-pointer transition-colors"
-                  onClick={() => {
-                    setSelectedEvent(event)
-                    setEventDetailOpen(true)
-                  }}
-                >
-                  {event.icon && (
-                    <img 
-                      src={event.icon} 
-                      alt={event.name}
-                      className="w-10 h-10 border-2 border-[#ff0040]"
-                      style={{ imageRendering: 'pixelated' }}
-                    />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-pixel text-[#ff0040] truncate">{event.name}</span>
-                      <div className="w-2 h-2 bg-[#ff0040] rounded-full animate-pulse" />
-                    </div>
-                    <span className="text-[10px] text-[#8888aa]">{formatTimeWithLabel(event.timeUTC)}</span>
-                  </div>
-                  <Button
-                    size="sm"
-                    className="text-[10px] px-2 py-1 bg-[#ff0040] text-white hover:bg-[#ff0040]/80 border-0"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      window.open(event.link || 'https://discord.gg/genlayer', '_blank')
-                    }}
-                  >
-                    JOIN
-                  </Button>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </motion.div>
-      )}
-
-      {/* Demo Mode - Manual Live Event */}
-      {demoMode && manualLiveEvent && (
-        <motion.div 
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-[#ff0040]/20 border-b-4 border-[#ff0040] px-4 py-3"
-        >
-          <div className="max-w-4xl mx-auto">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="flex items-center gap-2 px-3 py-1 bg-[#ff0040] animate-pulse">
-                <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
-                <span className="text-[10px] font-pixel text-white uppercase tracking-wider">🧪 DEMO LIVE</span>
-              </div>
-              <span className="text-sm text-[#b8b8c8]">Event yang dipilih sedang berlangsung</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <Button
-                size="sm"
-                className="text-xs px-4 py-2 border-2 border-[#ff0040] text-[#ff0040] bg-transparent hover:bg-[#ff0040]/20"
-                onClick={() => {
-                  setSelectedEvent(manualLiveEvent)
-                  setEventDetailOpen(true)
-                }}
-              >
-                {manualLiveEvent.name}
-              </Button>
-              <Button
-                size="sm"
-                className="text-xs px-3 py-2 bg-[#ff0040] text-white hover:bg-[#ff0040]/80"
-                onClick={() => {
-                  window.open(manualLiveEvent.link || 'https://discord.gg/genlayer', '_blank')
-                }}
-              >
-                Join Event
-              </Button>
-            </div>
-          </div>
-        </motion.div>
-      )}
 
       {/* Main Content */}
       <main className="flex-1 max-w-4xl mx-auto w-full px-4 py-6 space-y-6">
@@ -1611,39 +703,29 @@ function AppContent() {
           <motion.div
             initial={{ opacity: 0, y: -20, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            className="border-4 border-[#00fff7] bg-[#12121a] p-5 relative overflow-hidden pixel-shadow"
+            className={`p-5 relative overflow-hidden ${isGamingMode ? 'border-4 border-[#00fff7] bg-[#12121a] pixel-shadow' : 'border border-border bg-card rounded-lg shadow-sm'}`}
           >
-            {/* Corner decorations */}
-            <div className="absolute top-0 left-0 w-4 h-4 bg-[#00fff7]" />
-            <div className="absolute top-0 right-0 w-4 h-4 bg-[#00fff7]" />
-            <div className="absolute bottom-0 left-0 w-4 h-4 bg-[#00fff7]" />
-            <div className="absolute bottom-0 right-0 w-4 h-4 bg-[#00fff7]" />
-            
-            {/* Inner corner accents */}
-            <div className="absolute top-0 left-0 w-8 h-8 border-r-2 border-b-2 border-[#00fff7]/30" />
-            <div className="absolute top-0 right-0 w-8 h-8 border-l-2 border-b-2 border-[#00fff7]/30" />
-            <div className="absolute bottom-0 left-0 w-8 h-8 border-r-2 border-t-2 border-[#00fff7]/30" />
-            <div className="absolute bottom-0 right-0 w-8 h-8 border-l-2 border-t-2 border-[#00fff7]/30" />
+            {/* Corner decorations - only in Gaming Mode */}
+            {isGamingMode && (
+              <>
+                <div className="absolute top-0 left-0 w-4 h-4 bg-[#00fff7]" />
+                <div className="absolute top-0 right-0 w-4 h-4 bg-[#00fff7]" />
+                <div className="absolute bottom-0 left-0 w-4 h-4 bg-[#00fff7]" />
+                <div className="absolute bottom-0 right-0 w-4 h-4 bg-[#00fff7]" />
+                <div className="absolute top-0 left-0 w-8 h-8 border-r-2 border-b-2 border-[#00fff7]/30" />
+                <div className="absolute top-0 right-0 w-8 h-8 border-l-2 border-b-2 border-[#00fff7]/30" />
+                <div className="absolute bottom-0 left-0 w-8 h-8 border-r-2 border-t-2 border-[#00fff7]/30" />
+                <div className="absolute bottom-0 right-0 w-8 h-8 border-l-2 border-t-2 border-[#00fff7]/30" />
+              </>
+            )}
 
             <div className="flex items-center gap-2 mb-4">
-              {isEventLive(nextEvent) ? (
-                <>
-                  <div className="flex items-center gap-2 px-3 py-1 bg-[#ff0040] animate-pulse">
-                    <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
-                    <span className="text-[10px] font-pixel text-white uppercase tracking-wider">LIVE</span>
-                  </div>
-                  <span className="text-sm text-[#ff0040] font-pixel">Event sedang berlangsung!</span>
-                </>
-              ) : (
-                <>
-                  <Zap className="w-5 h-5 text-[#ffff00] pulse-neon" />
-                  <span className="text-[10px] font-pixel text-[#ffff00] uppercase tracking-wider">
-                    {t('nextEvent')}
-                  </span>
-                </>
-              )}
-              {isClient && alarmedEvents.has(nextEvent.id) && (
-                <span className="ml-auto text-[10px] px-3 py-1 border-2 border-[#39ff14] text-[#39ff14] font-pixel bg-[#39ff14]/10">
+              <Zap className={`w-5 h-5 ${isGamingMode ? 'text-[#ffff00] pulse-neon' : 'text-yellow-500'}`} />
+              <span className={`text-[10px] uppercase tracking-wider ${isGamingMode ? 'font-pixel text-[#ffff00]' : 'font-semibold text-foreground'}`}>
+                {t('nextEvent')}
+              </span>
+              {alarmedEvents.has(nextEvent.id) && (
+                <span className={`ml-auto text-[10px] px-3 py-1 ${isGamingMode ? 'border-2 border-[#39ff14] text-[#39ff14] font-pixel bg-[#39ff14]/10' : 'border border-green-500 text-green-600 bg-green-50 rounded'}`}>
                   <Bell className="w-3 h-3 inline mr-1" /> {t('alarmSet')}
                 </span>
               )}
@@ -1656,29 +738,29 @@ function AppContent() {
                     <img 
                       src={nextEvent.icon} 
                       alt={nextEvent.name}
-                      className="w-16 h-16 border-3 border-[#00fff7] pixel-shadow"
+                      className={`w-16 h-16 ${isGamingMode ? 'border-3 border-[#00fff7] pixel-shadow' : 'border border-border rounded-lg'}`}
                       style={{ imageRendering: 'pixelated' }}
                     />
-                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-[#39ff14] animate-pulse" />
+                    {isGamingMode && <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-[#39ff14] animate-pulse" />}
                   </div>
                 )}
                 <div>
-                  <h2 className="text-sm font-pixel neon-text-cyan mb-2">{nextEvent.name}</h2>
-                  <div className="flex items-center gap-4 text-[#8888aa] text-base">
+                  <h2 className={`text-sm mb-2 ${isGamingMode ? 'font-pixel neon-text-cyan' : 'font-semibold text-foreground'}`}>{nextEvent.name}</h2>
+                  <div className={`flex items-center gap-4 text-base ${isGamingMode ? 'text-[#8888aa]' : 'text-muted-foreground'}`}>
                     <span className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-[#00fff7]" />
-                      <span className="text-[#00fff7] font-pixel">{formatTimeWithLabel(nextEvent.timeUTC)}</span>
+                      <Clock className={`w-4 h-4 ${isGamingMode ? 'text-[#00fff7]' : 'text-primary'}`} />
+                      <span className={isGamingMode ? 'text-[#00fff7] font-pixel' : 'text-foreground'}>{formatTimeWithLabel(nextEvent.timeUTC)}</span>
                     </span>
                     <span className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-[#ff00ff]" />
-                      <span className="text-[#ff00ff]">{getDayName(nextEvent.day)}</span>
+                      <Calendar className={`w-4 h-4 ${isGamingMode ? 'text-[#ff00ff]' : 'text-primary'}`} />
+                      <span className={isGamingMode ? 'text-[#ff00ff]' : 'text-foreground'}>{getDayName(nextEvent.day)}</span>
                     </span>
                   </div>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <span 
-                  className="text-sm font-pixel px-4 py-2 border-3"
+                  className={`text-sm px-4 py-2 ${isGamingMode ? 'font-pixel border-3' : 'rounded-md border'}`}
                   style={{ 
                     borderColor: nextEvent.roleColor,
                     color: nextEvent.roleColor,
@@ -1703,13 +785,13 @@ function AppContent() {
                   initial={{ scale: 0.9, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: i * 0.1 }}
-                  className="p-3 border-3 border-[#2a2a4e] bg-[#0a0a0f] text-center relative overflow-hidden"
+                  className={`p-3 text-center relative overflow-hidden ${isGamingMode ? 'border-3 border-[#2a2a4e] bg-[#0a0a0f]' : 'border border-border bg-card rounded-lg'}`}
                 >
-                  <div className="absolute top-0 left-0 right-0 h-1" style={{ backgroundColor: item.color }} />
-                  <div className="text-2xl font-mono font-bold" style={{ color: item.color }}>
+                  {isGamingMode && <div className="absolute top-0 left-0 right-0 h-1" style={{ backgroundColor: item.color }} />}
+                  <div className={`text-2xl font-mono font-bold ${isGamingMode ? '' : 'text-foreground'}`} style={isGamingMode ? { color: item.color } : {}}>
                     {String(item.value).padStart(2, '0')}
                   </div>
-                  <div className="text-[10px] text-[#8888aa] mt-1 font-pixel">{item.label}</div>
+                  <div className={`text-[10px] mt-1 ${isGamingMode ? 'text-[#8888aa] font-pixel' : 'text-muted-foreground'}`}>{item.label}</div>
                 </motion.div>
               ))}
             </div>
@@ -1723,7 +805,7 @@ function AppContent() {
                     <span>{t('xpRewards')}</span>
                   </h4>
                   <span className="text-xs font-pixel text-[#ffd700] neon-text-gold">
-                    MAX: {getMaxXP(nextEvent).toLocaleString('en-US')} XP
+                    MAX: {getMaxXP(nextEvent).toLocaleString()} XP
                   </span>
                 </div>
                 <div className="p-2 border-3 border-[#2a2a4e] bg-[#0a0a0f] max-h-32 overflow-y-auto custom-scrollbar">
@@ -1732,7 +814,7 @@ function AppContent() {
                       <div key={idx} className="flex items-center justify-between text-sm p-1 hover:bg-[#39ff14]/10">
                         <span className="text-[#8888aa]">{reward.position}</span>
                         <span className="font-bold text-[#39ff14]">
-                          {reward.xp > 0 ? `${reward.xp.toLocaleString('en-US')} XP` : 'XP'}
+                          {reward.xp > 0 ? `${reward.xp.toLocaleString()} XP` : 'XP'}
                         </span>
                       </div>
                     ))}
@@ -1747,7 +829,7 @@ function AppContent() {
                 className="flex-1 border-3 border-[#00fff7] bg-[#00fff7] text-[#0a0a0f] hover:bg-[#39ff14] hover:border-[#39ff14] font-pixel text-xs pixel-button"
                 onClick={() => toggleEventAlarm(nextEvent.id)}
               >
-                {isClient && alarmedEvents.has(nextEvent.id) ? (
+                {alarmedEvents.has(nextEvent.id) ? (
                   <>
                     <Check className="w-4 h-4 mr-2" />
                     {t('alarmSet')}
@@ -1794,30 +876,22 @@ function AppContent() {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className={`flex items-center justify-between p-3 border-3 transition-all cursor-pointer ${isEventLive(event) ? 'border-[#ff0040] bg-[#ff0040]/10' : 'border-[#2a2a4e] hover:border-[#ff00ff] hover:bg-[#ff00ff]/5'}`}
+                className="flex items-center justify-between p-3 border-3 border-[#2a2a4e] hover:border-[#ff00ff] hover:bg-[#ff00ff]/5 transition-all cursor-pointer"
                 onClick={() => openEventDetail(event)}
               >
                 <div className="flex items-center gap-3">
                   {event.icon && (
-                    <div className="relative">
-                      <img 
-                        src={event.icon} 
-                        alt={event.name}
-                        className="w-10 h-10 border-2 border-[#ff00ff]"
-                        style={{ imageRendering: 'pixelated' }}
-                      />
-                      {isEventLive(event) && (
-                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-[#ff0040] rounded-full animate-pulse" />
-                      )}
-                    </div>
+                    <img 
+                      src={event.icon} 
+                      alt={event.name}
+                      className="w-10 h-10 border-2 border-[#ff00ff]"
+                      style={{ imageRendering: 'pixelated' }}
+                    />
                   )}
                   <Clock className="w-4 h-4 text-[#8888aa]" />
                   <span className="text-sm text-[#00fff7] font-pixel">{formatTimeWithLabel(event.timeUTC)}</span>
                   <span className="text-base truncate max-w-[120px]">{event.name}</span>
-                  {isEventLive(event) && (
-                    <span className="px-2 py-0.5 bg-[#ff0040] text-white text-[8px] font-pixel uppercase animate-pulse">LIVE</span>
-                  )}
-                  {isClient && alarmedEvents.has(event.id) && !isEventLive(event) && (
+                  {alarmedEvents.has(event.id) && (
                     <Bell className="w-4 h-4 text-[#39ff14] animate-pulse" />
                   )}
                 </div>
@@ -1879,35 +953,27 @@ function AppContent() {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.03 }}
-                className={`p-3 border-3 transition-all cursor-pointer ${isEventLive(event) ? 'border-[#ff0040] bg-[#ff0040]/10' : 'border-[#2a2a4e] hover:border-[#39ff14] hover:bg-[#39ff14]/5'}`}
+                className="p-3 border-3 border-[#2a2a4e] hover:border-[#39ff14] hover:bg-[#39ff14]/5 transition-all cursor-pointer"
                 onClick={() => openEventDetail(event)}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-start gap-3 flex-1 min-w-0">
                     {event.icon && (
-                      <div className="relative">
-                        <img 
-                          src={event.icon} 
-                          alt={event.name}
-                          className="w-12 h-12 border-2 border-[#39ff14] pixel-shadow"
-                          style={{ imageRendering: 'pixelated' }}
-                        />
-                        {isEventLive(event) && (
-                          <div className="absolute -top-1 -right-1 w-3 h-3 bg-[#ff0040] rounded-full animate-pulse" />
-                        )}
-                      </div>
+                      <img 
+                        src={event.icon} 
+                        alt={event.name}
+                        className="w-12 h-12 border-2 border-[#39ff14] pixel-shadow"
+                        style={{ imageRendering: 'pixelated' }}
+                      />
                     )}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3">
                         <Clock className="w-4 h-4 text-[#00fff7]" />
                         <span className="text-sm font-pixel text-[#00fff7]">{formatTimeWithLabel(event.timeUTC)}</span>
-                        {isEventLive(event) && (
-                          <span className="px-2 py-0.5 bg-[#ff0040] text-white text-[8px] font-pixel uppercase animate-pulse">LIVE</span>
-                        )}
                         {event.isSpecial && (
                           <span className="text-[#ffd700] animate-pulse">★</span>
                         )}
-                        {isClient && alarmedEvents.has(event.id) && !isEventLive(event) && (
+                        {alarmedEvents.has(event.id) && (
                           <Bell className="w-4 h-4 text-[#39ff14] animate-pulse" />
                         )}
                       </div>
@@ -1915,7 +981,7 @@ function AppContent() {
                       {event.xpRewards.length > 0 && (
                         <div className="text-[10px] text-[#ffd700] mt-1 font-pixel">
                           <Trophy className="w-3 h-3 inline mr-1" />
-                          MAX: {getMaxXP(event).toLocaleString('en-US')} XP
+                          MAX: {getMaxXP(event).toLocaleString()} XP
                         </div>
                       )}
                     </div>
@@ -1938,7 +1004,7 @@ function AppContent() {
         </div>
 
         {/* My Alarms */}
-        {isClient && alarmedEvents.size > 0 && (
+        {alarmedEvents.size > 0 && (
           <div className="border-4 border-[#ffd700] bg-[#12121a] p-5 relative pixel-shadow">
             <div className="absolute top-0 left-0 w-4 h-4 bg-[#ffd700]" />
             <div className="absolute top-0 right-0 w-4 h-4 bg-[#ffd700]" />
@@ -1990,19 +1056,21 @@ function AppContent() {
       </main>
 
       {/* Footer */}
-      <footer className="mt-auto border-t-4 border-[#2a2a4e] bg-[#0a0a0f] relative">
-        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-[#00fff7] via-[#ff00ff] to-[#39ff14] opacity-30" />
+      <footer className={`mt-auto relative ${isGamingMode ? 'border-t-4 border-[#2a2a4e] bg-[#0a0a0f]' : 'border-t border-border bg-card'}`}>
+        {isGamingMode && <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-[#00fff7] via-[#ff00ff] to-[#39ff14] opacity-30" />}
         <div className="max-w-4xl mx-auto px-4 py-4 text-center">
           <div className="flex items-center justify-center gap-2">
-            <span className="text-[#ffd700]">★</span>
-            <p className="text-[10px] font-pixel text-[#8888aa]">
+            <span className={isGamingMode ? 'text-[#ffd700]' : 'text-primary'}>★</span>
+            <p className={`text-[10px] ${isGamingMode ? 'font-pixel text-[#8888aa]' : 'text-muted-foreground'}`}>
               {t('footer')}
             </p>
-            <span className="text-[#ffd700]">★</span>
+            <span className={isGamingMode ? 'text-[#ffd700]' : 'text-primary'}>★</span>
           </div>
-          <p className="text-[10px] text-[#2a2a4e] mt-2 font-pixel">
-            PRESS START TO CONTINUE
-          </p>
+          {isGamingMode && (
+            <p className="text-[10px] text-[#2a2a4e] mt-2 font-pixel">
+              PRESS START TO CONTINUE
+            </p>
+          )}
         </div>
       </footer>
 
@@ -2018,38 +1086,11 @@ function AppContent() {
           }
         }}
       />
-      <AlarmListModal
-        open={alarmListOpen}
-        onOpenChange={setAlarmListOpen}
-        alarmedEvents={getAlarmedEventObjects()}
-        onRemoveAlarm={removeAlarm}
-        onClearAll={clearAllAlarms}
-      />
     </div>
   )
 }
 
 export default function Home() {
-  const [pressStartComplete, setPressStartComplete] = useState(false)
-  const [mounted, setMounted] = useState(false)
-  const { theme } = useTheme()
-  
-  // Use useIsomorphicLayoutEffect to avoid hydration mismatch
-  useIsomorphicLayoutEffect(() => {
-    setMounted(true)
-  }, [])
-  
-  const isGamingMode = mounted && theme === 'dark'
-  
-  // If gaming mode and press start not complete, show PressStart
-  if (isGamingMode && !pressStartComplete) {
-    return (
-      <LanguageProvider>
-        <PressStart onComplete={() => setPressStartComplete(true)} />
-      </LanguageProvider>
-    )
-  }
-  
   return (
     <LanguageProvider>
       <AppContent />

@@ -12,7 +12,6 @@ export interface Event {
   day: string;
   time: string;
   timeUTC: string;
-  description?: string;
   xpRewards: XPReward[];
   rewards?: string[];
   roleReq: string;
@@ -21,7 +20,6 @@ export interface Event {
   hasPOAP?: boolean;
   hasInsight?: boolean;
   link?: string;
-  duration?: number; // Duration in minutes
 }
 
 export interface Role {
@@ -38,15 +36,15 @@ export interface FunctionalRole {
   perks: string;
 }
 
-export const DAYS = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'] as const;
+export const DAYS = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'] as const;
 export const DAYS_ID: Record<string, string> = {
-  'SUNDAY': 'Minggu',
   'MONDAY': 'Senin',
   'TUESDAY': 'Selasa',
   'WEDNESDAY': 'Rabu',
   'THURSDAY': 'Kamis',
   'FRIDAY': 'Jumat',
-  'SATURDAY': 'Sabtu'
+  'SATURDAY': 'Sabtu',
+  'SUNDAY': 'Minggu'
 };
 
 // Discord Channel Links
@@ -103,7 +101,6 @@ export const events: Event[] = [
     day: 'MONDAY',
     time: '2:00 PM',
     timeUTC: '14:00',
-    description: 'Weekly Ask Me Anything session with the GenLayer team. Get updates, ask questions, and earn POAP for attending. Held on X (Twitter) Spaces.',
     xpRewards: [],
     rewards: ['Insight', 'POAP'],
     roleReq: 'Molecule+',
@@ -111,7 +108,6 @@ export const events: Event[] = [
     hasPOAP: true,
     hasInsight: true,
     link: DISCORD_LINKS.xSpace,
-    duration: 90, // X Space - 1 hour 30 minutes
   },
   {
     id: 'mon-quiz-korean',
@@ -120,12 +116,10 @@ export const events: Event[] = [
     day: 'MONDAY',
     time: '2:45 PM',
     timeUTC: '14:45',
-    description: 'Korean language quiz event for the Korean community. Test your knowledge about GenLayer and compete for XP rewards.',
     xpRewards: generateQuizRewards(),
     roleReq: 'Molecule+',
     roleColor: '#eab308',
     link: DISCORD_LINKS.regionalQuiz,
-    duration: 10, // Quiz - 10 minutes
   },
   {
     id: 'mon-quiz-ukrainian',
@@ -134,12 +128,10 @@ export const events: Event[] = [
     day: 'MONDAY',
     time: '6:00 PM',
     timeUTC: '18:00',
-    description: 'Ukrainian language quiz event for the Ukrainian community. Test your knowledge about GenLayer and compete for XP rewards.',
     xpRewards: generateQuizRewards(),
     roleReq: 'Molecule+',
     roleColor: '#eab308',
     link: DISCORD_LINKS.regionalQuiz,
-    duration: 10, // Quiz - 10 minutes
   },
   {
     id: 'mon-smashkarts',
@@ -148,12 +140,10 @@ export const events: Event[] = [
     day: 'MONDAY',
     time: '7:00 PM',
     timeUTC: '19:00',
-    description: 'Community Smash Karts racing game session. Race against other community members and earn XP based on your ranking.',
     xpRewards: generateSmashKartsRewards(),
     roleReq: 'Molecule+',
     roleColor: '#eab308',
     link: DISCORD_LINKS.others,
-    duration: 10, // Game - 10 minutes
   },
 
   // TUESDAY
@@ -164,12 +154,10 @@ export const events: Event[] = [
     day: 'TUESDAY',
     time: '12:30 PM',
     timeUTC: '12:30',
-    description: 'Nigerian community quiz event. Test your knowledge about GenLayer in this regional quiz and compete for XP rewards.',
     xpRewards: generateQuizRewards(),
     roleReq: 'Molecule+',
     roleColor: '#eab308',
     link: DISCORD_LINKS.quizNigeria,
-    duration: 10, // Quiz - 10 minutes
   },
   {
     id: 'tue-rumble-gartic',
@@ -178,7 +166,6 @@ export const events: Event[] = [
     day: 'TUESDAY',
     time: '1:00 PM',
     timeUTC: '13:00',
-    description: 'Double event! Rumble games followed by Gartic Phone drawing game. Draw, guess, and compete for XP rewards in both games.',
     xpRewards: [
       ...generateGarticRewards(),
       { position: 'Rumble Top 1', xp: 750 },
@@ -187,32 +174,28 @@ export const events: Event[] = [
     roleReq: 'Molecule+',
     roleColor: '#eab308',
     link: DISCORD_LINKS.rumbleGartic,
-    duration: 10, // Game - 10 minutes
   },
   {
     id: 'tue-vibecoding',
-    name: 'GenLayer Vibecoding Series',
+    name: 'GenLayer Vibecoding Session',
     icon: '/icons/vibecoding.png',
     day: 'TUESDAY',
     time: '2:00 PM',
     timeUTC: '14:00',
-    description: 'Weekly coding session with the GenLayer team. Learn about GenLayer development, build together, and share your projects.',
     xpRewards: [],
     rewards: ['Insight'],
     roleReq: 'Molecule+',
     roleColor: '#eab308',
     hasInsight: true,
     link: DISCORD_LINKS.others,
-    duration: 90, // Livestream - 1 hour 30 minutes
   },
   {
     id: 'tue-neurocreative',
-    name: 'Neurocreative Challenge',
+    name: 'Neurocreative Content Contest',
     icon: '/icons/meme-contest.png',
     day: 'TUESDAY',
     time: 'Pengumuman',
     timeUTC: '00:00',
-    description: 'Weekly content creation contest. Submit your GenLayer content as X posts in #neurocreatives channel. Winners announced every Tuesday.',
     xpRewards: [
       { position: '🥇', xp: 5000 },
       { position: '🥈', xp: 4500 },
@@ -226,13 +209,12 @@ export const events: Event[] = [
     link: DISCORD_LINKS.memeNeurocreative,
   },
   {
-    id: 'tue-trivia-quiz',
-    name: 'Trivia Quiz',
+    id: 'tue-school-quiz',
+    name: 'School Knowledge Quiz',
     icon: '/icons/trivia.png',
     day: 'TUESDAY',
-    time: '4:00 PM',
-    timeUTC: '16:00',
-    description: 'General knowledge trivia quiz about GenLayer, blockchain, and more. Compete with the community and climb the leaderboard for XP.',
+    time: '11:00 PM',
+    timeUTC: '23:00',
     xpRewards: [
       { position: 'Top 1', xp: 1500 },
       { position: 'Top 2', xp: 1400 },
@@ -249,18 +231,16 @@ export const events: Event[] = [
     roleReq: 'Molecule+',
     roleColor: '#eab308',
     link: DISCORD_LINKS.others,
-    duration: 10, // Quiz - 10 minutes
   },
 
   // WEDNESDAY
   {
     id: 'wed-ai-blockchain',
-    name: 'AI & Blockchain Quiz',
+    name: 'AI & Blockchain Brain Game',
     icon: '/icons/trivia.png',
     day: 'WEDNESDAY',
     time: '1:00 PM',
     timeUTC: '13:00',
-    description: 'Put your GenLayer knowledge to the test! This special quiz covers AI, blockchain, and GenLayer-specific topics. One of the biggest XP events of the week.',
     xpRewards: [
       { position: 'Top 1-3', xp: 3500 },
       { position: 'Top 4-15', xp: 3000 },
@@ -274,7 +254,6 @@ export const events: Event[] = [
     roleColor: '#eab308',
     isSpecial: true,
     link: DISCORD_LINKS.aiBlockchain,
-    duration: 10, // Quiz - 10 minutes
   },
   {
     id: 'wed-gentalks',
@@ -283,14 +262,13 @@ export const events: Event[] = [
     day: 'WEDNESDAY',
     time: '1:30 PM',
     timeUTC: '13:30',
-    description: 'Weekly community talks featuring GenLayer updates, guest speakers, and discussions. Join to learn and share insights about the ecosystem.',
     xpRewards: [],
-    rewards: ['Insight'],
+    rewards: ['Insight', 'POAP'],
     roleReq: 'Molecule+',
     roleColor: '#eab308',
+    hasPOAP: true,
     hasInsight: true,
     link: DISCORD_LINKS.xSpace,
-    duration: 90, // X Space - 1 hour 30 minutes
   },
   {
     id: 'wed-meme-contest',
@@ -299,7 +277,6 @@ export const events: Event[] = [
     day: 'WEDNESDAY',
     time: 'Pengumuman',
     timeUTC: '00:00',
-    description: 'Weekly meme contest! Create and submit your best GenLayer memes. Winners announced every Wednesday. Top memes earn XP rewards.',
     xpRewards: [
       { position: '🥇', xp: 2500 },
       { position: '🥈', xp: 2000 },
@@ -319,7 +296,6 @@ export const events: Event[] = [
     day: 'WEDNESDAY',
     time: '4:00 PM',
     timeUTC: '16:00',
-    description: 'Explore the world virtually! Guess locations based on Street View imagery. Test your geography skills and compete for XP.',
     xpRewards: [
       { position: 'Top 1', xp: 1500 },
       { position: 'Top 2', xp: 1400 },
@@ -333,7 +309,6 @@ export const events: Event[] = [
     roleReq: 'Molecule+',
     roleColor: '#eab308',
     link: DISCORD_LINKS.others,
-    duration: 10, // Game - 10 minutes
   },
 
   // THURSDAY
@@ -344,12 +319,10 @@ export const events: Event[] = [
     day: 'THURSDAY',
     time: '3:00 PM',
     timeUTC: '15:00',
-    description: 'Official weekly Smash Karts tournament! Race against other community members in this fun multiplayer kart racing game.',
     xpRewards: generateSmashKartsRewards(),
     roleReq: 'Molecule+',
     roleColor: '#eab308',
     link: DISCORD_LINKS.others,
-    duration: 10, // Game - 10 minutes
   },
   {
     id: 'thu-quiz-russian',
@@ -358,12 +331,10 @@ export const events: Event[] = [
     day: 'THURSDAY',
     time: '7:00 PM',
     timeUTC: '19:00',
-    description: 'Russian language quiz event for the Russian community. Test your knowledge about GenLayer and compete for XP rewards.',
     xpRewards: generateQuizRewards(),
     roleReq: 'Molecule+',
     roleColor: '#eab308',
     link: DISCORD_LINKS.regionalQuiz,
-    duration: 10, // Quiz - 10 minutes
   },
 
   // FRIDAY
@@ -374,7 +345,6 @@ export const events: Event[] = [
     day: 'FRIDAY',
     time: '3:00 PM',
     timeUTC: '15:00',
-    description: 'A special quiz for our community! Stay updated with GenLayer news, follow Twitter, and test your knowledge. Perfect scores earn the Certified GenFren role!',
     xpRewards: [
       { position: '10/10', xp: 2500 },
       { position: '9/10', xp: 2250 },
@@ -384,7 +354,6 @@ export const events: Event[] = [
     roleReq: 'Molecule+',
     roleColor: '#eab308',
     link: DISCORD_LINKS.genfrenQuiz,
-    duration: 10, // Quiz - 10 minutes
   },
   {
     id: 'fri-quiz-turkish',
@@ -393,12 +362,10 @@ export const events: Event[] = [
     day: 'FRIDAY',
     time: '7:00 PM',
     timeUTC: '19:00',
-    description: 'Turkish language quiz event for the Turkish community. Test your knowledge about GenLayer and compete for XP rewards.',
     xpRewards: generateQuizRewards(),
     roleReq: 'Molecule+',
     roleColor: '#eab308',
     link: DISCORD_LINKS.regionalQuiz,
-    duration: 10, // Quiz - 10 minutes
   },
 
   // SATURDAY
@@ -409,13 +376,12 @@ export const events: Event[] = [
     day: 'SATURDAY',
     time: '1:00 PM',
     timeUTC: '13:00',
-    description: 'Community-led X Space discussion about GenLayer. Join the conversation, share ideas, and connect with other community members.',
     xpRewards: [],
     rewards: ['GenLayer conversations & updates'],
     roleReq: 'Molecule+',
     roleColor: '#eab308',
+    hasPOAP: true,
     link: DISCORD_LINKS.xSpace,
-    duration: 90, // X Space - 1 hour 30 minutes
   },
   {
     id: 'sat-gartic',
@@ -424,26 +390,10 @@ export const events: Event[] = [
     day: 'SATURDAY',
     time: '2:00 PM',
     timeUTC: '14:00',
-    description: 'Gartic Phone drawing game session! Draw, guess, and laugh with the community. The artist with the most points wins XP.',
     xpRewards: generateGarticRewards(),
     roleReq: 'Molecule+',
     roleColor: '#eab308',
     link: DISCORD_LINKS.rumbleGartic,
-    duration: 10, // Game - 10 minutes
-  },
-  {
-    id: 'sat-quiz-chinese',
-    name: 'Quiz Chinese',
-    icon: '/icons/quiz-china.png',
-    day: 'SATURDAY',
-    time: '1:00 PM',
-    timeUTC: '13:00',
-    description: 'Chinese language quiz event for the Chinese community. Test your knowledge about GenLayer and compete for XP rewards.',
-    xpRewards: generateQuizRewards(),
-    roleReq: 'Molecule+',
-    roleColor: '#eab308',
-    link: DISCORD_LINKS.regionalQuiz,
-    duration: 10, // Quiz - 10 minutes
   },
   {
     id: 'sat-quiz-indonesian',
@@ -452,12 +402,10 @@ export const events: Event[] = [
     day: 'SATURDAY',
     time: '2:00 PM',
     timeUTC: '14:00',
-    description: 'Indonesian language quiz event for the Indonesian community. Test your knowledge about GenLayer and compete for XP rewards.',
     xpRewards: generateQuizRewards(),
     roleReq: 'Molecule+',
     roleColor: '#eab308',
     link: DISCORD_LINKS.quizIndonesia,
-    duration: 10, // Quiz - 10 minutes
   },
   {
     id: 'sat-quiz-vietnamese',
@@ -466,12 +414,10 @@ export const events: Event[] = [
     day: 'SATURDAY',
     time: '2:00 PM',
     timeUTC: '14:00',
-    description: 'Vietnamese language quiz event for the Vietnamese community. Test your knowledge about GenLayer and compete for XP rewards.',
     xpRewards: generateQuizRewards(),
     roleReq: 'Molecule+',
     roleColor: '#eab308',
     link: DISCORD_LINKS.regionalQuiz,
-    duration: 10, // Quiz - 10 minutes
   },
   {
     id: 'sat-karaoke',
@@ -480,13 +426,11 @@ export const events: Event[] = [
     day: 'SATURDAY',
     time: '4:00 PM',
     timeUTC: '16:00',
-    description: 'Fun community karaoke and open mic night! Sing, share stories, and enjoy time with the community. 3 random members get XP rewards.',
     xpRewards: [{ position: 'Q&A XP Rewards', xp: 0 }],
     rewards: ['3 random members dapat XP'],
     roleReq: 'Molecule+',
     roleColor: '#eab308',
     link: DISCORD_LINKS.karaoke,
-    duration: 60, // Karaoke - 60 minutes
   },
   {
     id: 'sat-quiz-indian',
@@ -495,12 +439,10 @@ export const events: Event[] = [
     day: 'SATURDAY',
     time: '4:00 PM',
     timeUTC: '16:00',
-    description: 'Indian language quiz event for the Indian community. Test your knowledge about GenLayer and compete for XP rewards.',
     xpRewards: generateQuizRewards(),
     roleReq: 'Molecule+',
     roleColor: '#eab308',
     link: DISCORD_LINKS.regionalQuiz,
-    duration: 10, // Quiz - 10 minutes
   },
 
   // SUNDAY
@@ -511,7 +453,6 @@ export const events: Event[] = [
     day: 'SUNDAY',
     time: '1:00 PM',
     timeUTC: '13:00',
-    description: 'Weekly chess tournament for Brain role members! Compete in strategic matches and climb the leaderboard for XP rewards.',
     xpRewards: [
       { position: 'Top 1', xp: 2000 },
       { position: 'Top 2', xp: 1750 },
@@ -523,7 +464,6 @@ export const events: Event[] = [
     roleReq: 'Brain+',
     roleColor: '#a855f7',
     link: DISCORD_LINKS.pokerChess,
-    duration: 10, // Game - 10 minutes
   },
   {
     id: 'sun-pokerhands',
@@ -532,7 +472,6 @@ export const events: Event[] = [
     day: 'SUNDAY',
     time: '2:00 PM',
     timeUTC: '14:00',
-    description: 'Weekly poker tournament for Neuron role members! Test your poker skills and compete for XP in this community favorite event.',
     xpRewards: [
       { position: 'Top 1', xp: 1500 },
       { position: 'Top 2', xp: 1400 },
@@ -546,7 +485,6 @@ export const events: Event[] = [
     roleReq: 'Neuron+',
     roleColor: '#f97316',
     link: DISCORD_LINKS.pokerChess,
-    duration: 10, // Game - 10 minutes
   },
   {
     id: 'sun-kirka',
@@ -555,7 +493,6 @@ export const events: Event[] = [
     day: 'SUNDAY',
     time: '3:00 PM',
     timeUTC: '15:00',
-    description: 'Kirka FPS game session! Join the community for some first-person shooter action. Compete and earn XP based on your performance.',
     xpRewards: [
       { position: 'Top 1', xp: 1500 },
       { position: 'Top 2', xp: 1400 },
@@ -568,7 +505,6 @@ export const events: Event[] = [
     roleReq: 'Molecule+',
     roleColor: '#eab308',
     link: DISCORD_LINKS.others,
-    duration: 10, // Game - 10 minutes
   },
 ];
 
@@ -576,70 +512,103 @@ export const roles: Role[] = [
   {
     name: 'Molecule',
     emoji: '🟡',
-    requirements: 'Level 1 (say "genm" in #neural-activity)',
-    perks: 'Akses semua entry channels',
+    requirements: 'Level 1',
+    perks: 'Akses semua channel entry-level',
     color: '#eab308',
   },
   {
     name: 'Neuron',
     emoji: '🟠',
     requirements: 'Level 6',
-    perks: 'Kirim links/images, Poker tournaments',
+    perks: 'Kirim gambar, Poker tournaments',
     color: '#f97316',
   },
   {
+    name: 'Synapse Intern',
+    emoji: '',
+    requirements: 'Level 16',
+    perks: '-',
+    color: '#6366f1',
+  },
+  {
     name: 'Synapse',
-    emoji: '🔵',
-    requirements: 'Level 16 + 8 POAPs + Certified GenFren',
+    emoji: '',
+    requirements: '8 POAPs + Intern + Certified GenFren',
     perks: '#synapse-beats, Birthday channel',
     color: '#6366f1',
   },
   {
+    name: 'Brain Intern',
+    emoji: '',
+    requirements: 'Level 32',
+    perks: '-',
+    color: '#8b5cf6',
+  },
+  {
     name: 'Brain',
     emoji: '🟣',
-    requirements: 'Level 32 + 16 POAPs + Certified GenFren + Neurocreative',
+    requirements: '16 POAPs + Intern + Certified GenFren + Neurocreative',
     perks: '#brain-chat, #genviews, Chess tournaments',
     color: '#a855f7',
   },
   {
+    name: 'Singularity Intern',
+    emoji: '',
+    requirements: 'Level 46',
+    perks: '-',
+    color: '#ec4899',
+  },
+  {
     name: 'Singularity',
     emoji: '⭐',
-    requirements: 'Level 46 + 28 POAPs + Application + Neurocreative + Certified GenFren',
-    perks: '#singularity-chat, Vote contests, Followed by GenLayer X, Special Badge',
-    color: '#39ff14',
+    requirements: '28 POAPs + Application + Neurocreative + Certified GenFren',
+    perks: '#singularity-chat, Vote contests, Special Badge',
+    color: '#f43f5e',
   },
 ];
 
 export const functionalRoles: FunctionalRole[] = [
   {
     name: 'Neurocreative',
-    requirements: '8+ quality X posts OR Top 5 Contest OR 3+ Honorary (via ticket)',
-    perks: '#neurocreatives channel, 1 bulan inactive = purge',
+    requirements: '8+ quality X posts OR Top 5 Content Contest OR 3+ Honorary',
+    perks: '#neurocreatives channel',
   },
   {
     name: 'Neurohost',
-    requirements: 'Application based',
-    perks: 'Event hosts coordination',
-  },
-  {
-    name: 'Builder Working Group',
-    requirements: 'Selected by GenLayer Team',
-    perks: 'Selective role untuk developer contributions',
+    requirements: 'Application',
+    perks: '#Neurohost coordination',
   },
   {
     name: 'Certified GenFren',
     requirements: '10/10 GenFren Quiz',
-    perks: 'Special Badge',
+    perks: 'Special Badge (1 minggu)',
+  },
+  {
+    name: 'Neurobuilder',
+    requirements: 'Opt-in di #role-info',
+    perks: 'Builder channels',
+  },
+  {
+    name: 'Neurotweets',
+    requirements: 'Opt-in di #role-info',
+    perks: 'Notif X posts',
+  },
+  {
+    name: 'Neurogamer',
+    requirements: 'Opt-in di #role-info',
+    perks: 'Notif games & events',
   },
 ];
 
 export const xpPoapSources = [
-  { source: 'GenLayer Community AMA', xp: false, poap: true },
-  { source: 'Quizzes (Regional, AI, GenFren, Trivia)', xp: true, poap: false },
-  { source: 'Games (Gartic, Smash Karts, Kirka, GeoGuessr)', xp: true, poap: false },
-  { source: 'PokerHands & ChessLayer', xp: true, poap: false },
+  { source: 'Quizzes & Games', xp: true, poap: false },
   { source: 'Contests (Meme/Content)', xp: true, poap: false },
+  { source: 'AMA Discord', xp: false, poap: true },
+  { source: 'GenTalks', xp: false, poap: true },
+  { source: 'X Livestreams/Spaces', xp: false, poap: true },
+  { source: 'Special Events', xp: true, poap: true },
   { source: 'Monthly Contributor Highlights', xp: true, poap: false },
+  { source: 'Discord Chat', xp: false, poap: false },
 ];
 
 export const monthlyContributorHighlights = [
@@ -649,18 +618,27 @@ export const monthlyContributorHighlights = [
   { category: 'Content', rewards: [5000, 4500, 4000, 3000, 2000] },
 ];
 
+export const importantLinks = [
+  { name: 'Event Calendar', url: '#today-at-genlayer', description: '#today-at-genlayer' },
+  { name: 'Announcements', url: '#announcements', description: '#announcements' },
+  { name: 'POAP App iOS', url: 'https://apps.apple.com/tc/app/poap-home/id6478871538', description: 'Download POAP untuk iOS' },
+  { name: 'POAP App Android', url: 'https://play.google.com/store/apps/details?id=xyz.poap.mobile.app', description: 'Download POAP untuk Android' },
+  { name: 'Developer Docs', url: 'https://docs.genlayer.com/', description: 'Dokumentasi developer' },
+  { name: 'GenLayer Studio', url: 'https://studio.genlayer.com/contracts', description: 'Smart Contract Studio' },
+  { name: 'X Community', url: 'https://x.com/i/communities/2006334000076406822', description: 'Komunitas X GenLayer' },
+];
+
 export const importantNotes = [
   'Cek #today-at-genlayer setiap hari untuk jadwal update',
   'Cek #announcements untuk pembatalan event (AMA bisa dibatalkan)',
-  'POAP hanya dari GenLayer Community AMA (Monday 14:00 UTC)',
   'POAP minimal: Synapse (8), Brain (16), Singularity (28)',
   'Certified GenFren diperlukan untuk role Synapse, Brain, dan Singularity',
   'Neurocreative role diperlukan untuk Brain dan Singularity',
-  'Neurocreative: 1 bulan inactive = role purge',
-  'Singularity applications dibuka minggu terakhir setiap bulan via tickets (max 2 member/bulan)',
+  'Singularity applications dibuka minggu terakhir setiap bulan (max 2 member/bulan)',
   'Nickname harus sama dengan Discord untuk event game (SmashKarts, Kirka, GeoGuessr, dll)',
   'Screenshot leaderboard diperlukan jika nickname tidak match',
-  'Monthly Contributor Highlights - 4 kategori - Max 5000 XP',
+  'Multiple rooms tersedia untuk event besar (EU/Asia servers)',
+  'Monthly Contributor Highlights - 4 kategori (Onboarding, Events, Builders, Content) - Max 5000 XP',
 ];
 
 // Get current day events

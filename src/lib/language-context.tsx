@@ -16,7 +16,7 @@ const translations: Record<Language, Record<string, string>> = {
   en: {
     // Header
     'app.title': 'GenLayer Event Alarm',
-    'app.subtitle': '',
+    'app.subtitle': 'February 2026',
     'roles': 'Roles',
     'alarm.on': 'ON',
     'alarm.off': 'OFF',
@@ -28,11 +28,6 @@ const translations: Record<Language, Record<string, string>> = {
     'alarmSet': 'Alarm Set',
     'removeAlarm': 'Remove',
     'joinEvent': 'Join Event',
-    
-    // Alarm List
-    'alarmList': 'Alarm List',
-    'noAlarms': 'No alarms set',
-    'clearAllAlarms': 'Clear All Alarms',
     
     // Today's Events
     'todayEvents': "Today's Events",
@@ -67,7 +62,7 @@ const translations: Record<Language, Record<string, string>> = {
     'sec': 'Sec',
     
     // Footer
-    'footer': 'GenLayer Events',
+    'footer': 'Updated • February 2026 • GenLayer Events',
     
     // Notification
     'notification.set': 'Alarm set! You will be notified 5 minutes before the event.',
@@ -86,18 +81,11 @@ const translations: Record<Language, Record<string, string>> = {
     'monthlyContributor': 'Monthly Contributor Highlights',
     'importantNotes': 'Important Notes',
     'importantLinks': 'Important Links',
-    'qualifyingRoles': 'Qualifying Roles',
-    'orHigher': 'or higher',
-    'roleInfo': 'Role Info',
-    'rank': 'Rank',
-    'clickRolesForInfo': 'Click role for more info',
-    'monthlyHighlights': 'Monthly Highlights',
-    'topContributors': 'Top Contributors',
   },
   id: {
     // Header
     'app.title': 'Alarm Event GenLayer',
-    'app.subtitle': '',
+    'app.subtitle': 'Februari 2026',
     'roles': 'Role',
     'alarm.on': 'NYALA',
     'alarm.off': 'MATI',
@@ -109,11 +97,6 @@ const translations: Record<Language, Record<string, string>> = {
     'alarmSet': 'Alarm Disetel',
     'removeAlarm': 'Hapus',
     'joinEvent': 'Gabung Event',
-    
-    // Alarm List
-    'alarmList': 'Daftar Alarm',
-    'noAlarms': 'Belum ada alarm',
-    'clearAllAlarms': 'Hapus Semua Alarm',
     
     // Today's Events
     'todayEvents': 'Event Hari Ini',
@@ -148,7 +131,7 @@ const translations: Record<Language, Record<string, string>> = {
     'sec': 'Det',
     
     // Footer
-    'footer': 'Event GenLayer',
+    'footer': 'Diperbarui • Februari 2026 • Event GenLayer',
     
     // Notification
     'notification.set': 'Alarm disetel! Anda akan diberitahu 5 menit sebelum event.',
@@ -167,13 +150,6 @@ const translations: Record<Language, Record<string, string>> = {
     'monthlyContributor': 'Highlight Kontributor Bulanan',
     'importantNotes': 'Catatan Penting',
     'importantLinks': 'Link Penting',
-    'qualifyingRoles': 'Role yang Memenuhi Syarat',
-    'orHigher': 'atau lebih tinggi',
-    'roleInfo': 'Info Role',
-    'rank': 'Peringkat',
-    'clickRolesForInfo': 'Klik role untuk info lebih lanjut',
-    'monthlyHighlights': 'Highlight Bulanan',
-    'topContributors': 'Kontributor Teratas',
   }
 }
 
