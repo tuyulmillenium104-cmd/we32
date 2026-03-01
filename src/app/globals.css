@@ -182,11 +182,27 @@
     letter-spacing: 0.5px;
     line-height: 1.4;
   }
-  
+
+  /* Light mode (Biasa) uses normal fonts */
+  .light body,
+  .light {
+    font-family: var(--font-geist-sans), system-ui, sans-serif !important;
+    letter-spacing: normal;
+    line-height: 1.5;
+  }
+
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Press Start 2P', cursive;
     text-transform: uppercase;
     letter-spacing: 1px;
+  }
+
+  /* Light mode headings use normal fonts */
+  .light h1, .light h2, .light h3, .light h4, .light h5, .light h6 {
+    font-family: var(--font-geist-sans), system-ui, sans-serif !important;
+    text-transform: none;
+    letter-spacing: normal;
+    font-weight: 600;
   }
 }
 
@@ -690,23 +706,7 @@ button:not([role="tab"]):not([data-slot="dialog-close"]) {
   text-transform: uppercase;
 }
 
-/* Light mode (Biasa) - disable retro effects and use normal fonts */
-.light {
-  --font-pixel: var(--font-sans), sans-serif;
-  --font-pixel-body: var(--font-sans), sans-serif;
-}
-
-.light body {
-  font-family: var(--font-sans), sans-serif !important;
-  letter-spacing: normal;
-}
-
-.light h1, .light h2, .light h3, .light h4, .light h5, .light h6 {
-  font-family: var(--font-sans), sans-serif !important;
-  text-transform: none;
-  letter-spacing: normal;
-}
-
+/* Light mode (Biasa) - disable retro effects */
 .light .retro-grid {
   background-image: none;
 }
@@ -740,11 +740,11 @@ button:not([role="tab"]):not([data-slot="dialog-close"]) {
 }
 
 .light .font-pixel {
-  font-family: var(--font-sans), sans-serif !important;
+  font-family: var(--font-geist-sans), system-ui, sans-serif !important;
 }
 
 .light .font-pixel-body {
-  font-family: var(--font-sans), sans-serif !important;
+  font-family: var(--font-geist-sans), system-ui, sans-serif !important;
 }
 
 /* Dialog clean styling for light mode */
