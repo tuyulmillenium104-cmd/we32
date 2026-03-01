@@ -215,18 +215,18 @@ function ThemeToggle() {
   )
 }
 
-function LanguageToggle() {
+function LanguageToggle({ isGamingMode }: { isGamingMode: boolean }) {
   const { language, setLanguage } = useLanguage()
 
   return (
     <Button 
       variant="outline" 
       size="sm" 
-      className="gap-1.5 border-3 border-[#ff00ff] bg-[#12121a] hover:bg-[#ff00ff]/20 font-pixel text-xs pixel-button"
+      className={`gap-1.5 text-xs ${isGamingMode ? 'border-3 border-[#ff00ff] bg-[#12121a] hover:bg-[#ff00ff]/20 font-pixel pixel-button' : ''}`}
       onClick={() => setLanguage(language === 'id' ? 'en' : 'id')}
     >
-      <Globe className="w-4 h-4 text-[#ff00ff]" />
-      <span className="text-[#ff00ff] font-bold">{language === 'id' ? 'ID' : 'EN'}</span>
+      <Globe className={`w-4 h-4 ${isGamingMode ? 'text-[#ff00ff]' : 'text-primary'}`} />
+      <span className={`font-bold ${isGamingMode ? 'text-[#ff00ff]' : 'text-primary'}`}>{language === 'id' ? 'ID' : 'EN'}</span>
     </Button>
   )
 }
@@ -819,6 +819,10 @@ function Notification({ message, onClose }: { message: string; onClose: () => vo
 function AppContent() {
   const { t, language, formatTimeWithLabel } = useLanguage()
   const getDayName = useDayName()
+  const { theme } = useTheme()
+  
+  // Determine if gaming mode (dark theme) is active
+  const isGamingMode = theme === 'dark'
   
   const [selectedDay, setSelectedDay] = useState<string>(getCurrentUTCDay())
   const [alarmedEvents, setAlarmedEvents] = useState<Set<string>>(new Set())
@@ -1194,10 +1198,14 @@ function AppContent() {
   }, [])
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0a0a0f] text-[#e0e0e0] retro-grid relative crt">
-      {/* Animated pixel decorations */}
-      <div className="fixed top-0 left-0 w-full h-1 bg-gradient-to-r from-[#00fff7] via-[#ff00ff] to-[#39ff14] opacity-50 z-50" />
-      <div className="fixed bottom-0 left-0 w-full h-1 bg-gradient-to-r from-[#39ff14] via-[#ff00ff] to-[#00fff7] opacity-50 z-50" />
+    <div className={`min-h-screen flex flex-col relative ${isGamingMode ? 'bg-[#0a0a0f] text-[#e0e0e0] retro-grid crt' : 'bg-background text-foreground'}`}>
+      {/* Animated pixel decorations - only in gaming mode */}
+      {isGamingMode && (
+        <>
+          <div className="fixed top-0 left-0 w-full h-1 bg-gradient-to-r from-[#00fff7] via-[#ff00ff] to-[#39ff14] opacity-50 z-50" />
+          <div className="fixed bottom-0 left-0 w-full h-1 bg-gradient-to-r from-[#39ff14] via-[#ff00ff] to-[#00fff7] opacity-50 z-50" />
+        </>
+      )}
 
       <AnimatePresence>
         {notification && (
@@ -1238,23 +1246,29 @@ function AppContent() {
       </AnimatePresence>
 
       {/* Header */}
-      <header className="sticky top-0 z-40 border-b-4 border-[#00fff7] bg-[#0a0a0f]/95 backdrop-blur-sm relative">
-        <PixelDecoration className="top-2 left-4" />
-        <PixelDecoration className="top-2 right-4" />
+      <header className={`sticky top-0 z-40 backdrop-blur-sm relative ${isGamingMode ? 'border-b-4 border-[#00fff7] bg-[#0a0a0f]/95' : 'border-b border-border bg-background/95'}`}>
+        {isGamingMode && (
+          <>
+            <PixelDecoration className="top-2 left-4" />
+            <PixelDecoration className="top-2 right-4" />
+          </>
+        )}
         
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 border-3 border-[#00fff7] bg-[#12121a] flex items-center justify-center pixel-shadow relative overflow-hidden">
+              <div className={`w-12 h-12 flex items-center justify-center relative overflow-hidden ${isGamingMode ? 'border-3 border-[#00fff7] bg-[#12121a] pixel-shadow' : 'border border-border bg-card rounded-lg'}`}>
                 <img 
                   src="/genlayer-logo.jpg" 
                   alt="GenLayer" 
                   className="w-10 h-10 object-contain"
                 />
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-[#39ff14] animate-pulse" />
+                {isGamingMode && (
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-[#39ff14] animate-pulse" />
+                )}
               </div>
               <div>
-                <h1 className="text-[10px] font-pixel neon-text-cyan glitch" data-text={t('app.title')}>
+                <h1 className={`text-lg font-bold ${isGamingMode ? 'text-[10px] font-pixel neon-text-cyan glitch' : 'text-foreground'}`} data-text={isGamingMode ? t('app.title') : undefined}>
                   {t('app.title')}
                 </h1>
               </div>
@@ -1262,13 +1276,13 @@ function AppContent() {
 
             <div className="flex items-center gap-2">
               {/* Clock Display */}
-              <div className="hidden sm:flex flex-col items-center px-3 py-1 border-3 border-[#2a2a4e] bg-[#12121a]">
+              <div className={`hidden sm:flex flex-col items-center px-3 py-1 ${isGamingMode ? 'border-3 border-[#2a2a4e] bg-[#12121a]' : 'border border-border bg-card rounded-md'}`}>
                 <div className="flex items-center gap-2">
-                  <Clock className="w-3 h-3 text-[#00fff7]" />
-                  <span className="text-xs font-mono text-[#00fff7]">{currentTime}</span>
-                  <span className="text-[8px] font-pixel text-[#ff00ff]">{language === 'id' ? 'WIB' : 'UTC'}</span>
+                  <Clock className={`w-3 h-3 ${isGamingMode ? 'text-[#00fff7]' : 'text-primary'}`} />
+                  <span className={`text-xs font-mono ${isGamingMode ? 'text-[#00fff7]' : 'text-foreground'}`}>{currentTime}</span>
+                  <span className={`text-[8px] ${isGamingMode ? 'font-pixel text-[#ff00ff]' : 'text-muted-foreground'}`}>{language === 'id' ? 'WIB' : 'UTC'}</span>
                 </div>
-                <span className="text-[8px] font-pixel text-[#8888aa]">
+                <span className={`text-[8px] ${isGamingMode ? 'font-pixel text-[#8888aa]' : 'text-muted-foreground'}`}>
                   {currentDateString || 'Loading...'}
                 </span>
               </div>
@@ -1276,7 +1290,7 @@ function AppContent() {
               {isClient && alarmEnabled && (
                 <button
                   onClick={() => setAlarmListOpen(true)}
-                  className="flex items-center gap-1 text-[10px] px-3 py-2 border-3 border-[#39ff14] text-[#39ff14] bg-[#39ff14]/10 font-pixel hover:bg-[#39ff14]/30 transition-colors cursor-pointer"
+                  className={`flex items-center gap-1 text-xs px-3 py-2 transition-colors cursor-pointer ${isGamingMode ? 'border-3 border-[#39ff14] text-[#39ff14] bg-[#39ff14]/10 font-pixel hover:bg-[#39ff14]/30' : 'border border-primary text-primary bg-primary/10 rounded-md hover:bg-primary/20'}`}
                 >
                   <BellRing className="w-4 h-4 animate-pulse" />
                   <span>{alarmedEvents.size}</span>
@@ -1287,23 +1301,23 @@ function AppContent() {
               <Button 
                 variant="outline" 
                 size="sm" 
-                className={`gap-1.5 border-3 font-pixel text-xs pixel-button ${demoMode ? 'border-[#ff0040] bg-[#ff0040]/20 text-[#ff0040]' : 'border-[#8888aa] bg-[#12121a] text-[#8888aa]'}`}
+                className={`gap-1.5 text-xs ${isGamingMode ? 'border-3 font-pixel pixel-button ' + (demoMode ? 'border-[#ff0040] bg-[#ff0040]/20 text-[#ff0040]' : 'border-[#8888aa] bg-[#12121a] text-[#8888aa]') : demoMode ? 'border-destructive bg-destructive/10 text-destructive' : ''}`}
                 onClick={() => setDemoMode(!demoMode)}
               >
                 <Zap className="w-4 h-4" />
                 <span className="hidden sm:inline">DEMO</span>
               </Button>
 
-              <LanguageToggle />
+              <LanguageToggle isGamingMode={isGamingMode} />
 
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="gap-1.5 border-3 border-[#ffd700] bg-[#12121a] hover:bg-[#ffd700]/20 pixel-button"
+                className={`gap-1.5 ${isGamingMode ? 'border-3 border-[#ffd700] bg-[#12121a] hover:bg-[#ffd700]/20 pixel-button' : ''}`}
                 onClick={() => setRoleModalOpen(true)}
               >
-                <Users className="w-4 h-4 text-[#ffd700]" />
-                <span className="hidden sm:inline text-[10px] font-pixel text-[#ffd700]">{t('roles')}</span>
+                <Users className={`w-4 h-4 ${isGamingMode ? 'text-[#ffd700]' : 'text-primary'}`} />
+                <span className={`hidden sm:inline text-xs ${isGamingMode ? 'font-pixel text-[#ffd700]' : ''}`}>{t('roles')}</span>
               </Button>
 
               <ThemeToggle />
@@ -1311,13 +1325,13 @@ function AppContent() {
           </div>
 
           {/* Mobile Clock */}
-          <div className="flex sm:hidden flex-col items-start mt-2 px-2 py-1 border-3 border-[#2a2a4e] bg-[#12121a] w-fit">
+          <div className={`flex sm:hidden flex-col items-start mt-2 px-2 py-1 w-fit ${isGamingMode ? 'border-3 border-[#2a2a4e] bg-[#12121a]' : 'border border-border bg-card rounded-md'}`}>
             <div className="flex items-center gap-2">
-              <Clock className="w-3 h-3 text-[#00fff7]" />
-              <span className="text-xs font-mono text-[#00fff7]">{currentTime}</span>
-              <span className="text-[8px] font-pixel text-[#ff00ff]">{language === 'id' ? 'WIB' : 'UTC'}</span>
+              <Clock className={`w-3 h-3 ${isGamingMode ? 'text-[#00fff7]' : 'text-primary'}`} />
+              <span className={`text-xs font-mono ${isGamingMode ? 'text-[#00fff7]' : 'text-foreground'}`}>{currentTime}</span>
+              <span className={`text-[8px] ${isGamingMode ? 'font-pixel text-[#ff00ff]' : 'text-muted-foreground'}`}>{language === 'id' ? 'WIB' : 'UTC'}</span>
             </div>
-            <span className="text-[8px] font-pixel text-[#8888aa]">
+            <span className={`text-[8px] ${isGamingMode ? 'font-pixel text-[#8888aa]' : 'text-muted-foreground'}`}>
               {currentDateString || 'Loading...'}
             </span>
           </div>
@@ -1329,21 +1343,21 @@ function AppContent() {
         <motion.div 
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-[#ff0040]/20 border-b-4 border-[#ff0040] px-4 py-3"
+          className={`${isGamingMode ? 'bg-[#ff0040]/20 border-b-4 border-[#ff0040]' : 'bg-destructive/10 border-b border-destructive'} px-4 py-3`}
         >
           <div className="max-w-4xl mx-auto">
             {/* Sandbox Warning - Show if notifications not available */}
             {typeof Notification === 'undefined' || typeof Notification.requestPermission !== 'function' ? (
-              <div className="mb-3 p-3 bg-[#ffd700]/20 border-2 border-[#ffd700]">
+              <div className={`mb-3 p-3 ${isGamingMode ? 'bg-[#ffd700]/20 border-2 border-[#ffd700]' : 'bg-yellow-100 dark:bg-yellow-900/20 border border-yellow-500 rounded-lg'}`}>
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-sm">⚠️</span>
-                  <span className="text-[10px] font-pixel text-[#ffd700]">MODE PREVIEW - NOTIFIKASI TERBATAS</span>
+                  <span className={`text-xs ${isGamingMode ? 'font-pixel text-[#ffd700]' : 'text-yellow-700 dark:text-yellow-400 font-semibold'}`}>MODE PREVIEW - NOTIFIKASI TERBATAS</span>
                 </div>
-                <p className="text-[10px] text-[#b8b8c8] mb-2">
+                <p className={`text-xs ${isGamingMode ? 'text-[#b8b8c8]' : 'text-muted-foreground'} mb-2`}>
                   Anda sedang dalam mode preview/sandbox. Notifikasi desktop tidak tersedia.
                 </p>
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] text-[#39ff14] font-bold">
+                  <span className={`text-xs ${isGamingMode ? 'text-[#39ff14]' : 'text-green-600 dark:text-green-400'} font-bold`}>
                     👆 Klik tombol "Open in New Tab" di atas preview untuk mengaktifkan notifikasi desktop!
                   </span>
                 </div>
@@ -1353,25 +1367,25 @@ function AppContent() {
             {/* Header */}
             <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
               <div className="flex items-center gap-3">
-                <Zap className="w-5 h-5 text-[#ff0040] animate-pulse" />
-                <span className="text-sm font-pixel text-[#ff0040]">🧪 DEMO MODE AKTIF</span>
+                <Zap className={`w-5 h-5 animate-pulse ${isGamingMode ? 'text-[#ff0040]' : 'text-destructive'}`} />
+                <span className={`text-sm ${isGamingMode ? 'font-pixel text-[#ff0040]' : 'text-destructive font-semibold'}`}>🧪 DEMO MODE AKTIF</span>
               </div>
               <div className="flex items-center gap-3 flex-wrap">
                 {/* Demo Mode Info */}
-                <span className="text-[10px] text-[#8888aa]">
+                <span className={`text-xs ${isGamingMode ? 'text-[#8888aa]' : 'text-muted-foreground'}`}>
                   Test notifikasi di sini sebelum event mulai
                 </span>
               </div>
             </div>
             
             {/* Test Buttons */}
-            <div className="bg-[#0a0a0f] p-3 border-2 border-[#ff0040]/50 mb-3">
-              <div className="text-[10px] text-[#ffd700] font-pixel mb-2">🎮 TEST ALARM:</div>
+            <div className={`p-3 ${isGamingMode ? 'bg-[#0a0a0f] border-2 border-[#ff0040]/50' : 'bg-card border border-border rounded-lg'} mb-3`}>
+              <div className={`text-xs mb-2 ${isGamingMode ? 'text-[#ffd700] font-pixel' : 'text-primary font-semibold'}`}>🎮 TEST ALARM:</div>
               <div className="flex flex-wrap gap-2">
                 {/* Instant Test - Toast Only */}
                 <Button
                   size="sm"
-                  className="text-[10px] px-3 py-2 bg-[#39ff14] text-[#0a0a0f] hover:bg-[#39ff14]/80 font-bold"
+                  className={`text-xs px-3 py-2 font-bold ${isGamingMode ? 'bg-[#39ff14] text-[#0a0a0f] hover:bg-[#39ff14]/80' : 'bg-primary text-primary-foreground hover:bg-primary/90'}`}
                   onClick={() => {
                     showBrowserNotification(
                       '🔔 Test Alarm',
@@ -1386,16 +1400,16 @@ function AppContent() {
                 </Button>
                 
                 {/* Background Test Buttons */}
-                <span className="text-[10px] text-[#8888aa] self-center ml-2">Background Test:</span>
+                <span className={`text-xs self-center ml-2 ${isGamingMode ? 'text-[#8888aa]' : 'text-muted-foreground'}`}>Background Test:</span>
                 {[5, 10, 15, 30].map((seconds) => (
                   <Button
                     key={seconds}
                     size="sm"
                     disabled={backgroundTestCountdown !== null}
-                    className={`text-[10px] px-3 py-2 border-2 font-bold ${
+                    className={`text-xs px-3 py-2 font-bold ${
                       backgroundTestCountdown !== null 
-                        ? 'border-[#8888aa] text-[#8888aa] cursor-not-allowed' 
-                        : 'border-[#00fff7] text-[#00fff7] hover:bg-[#00fff7]/20'
+                        ? isGamingMode ? 'border-2 border-[#8888aa] text-[#8888aa] cursor-not-allowed' : 'border border-muted-foreground text-muted-foreground cursor-not-allowed opacity-50'
+                        : isGamingMode ? 'border-2 border-[#00fff7] text-[#00fff7] hover:bg-[#00fff7]/20' : 'border border-primary text-primary hover:bg-primary/10'
                     }`}
                     onClick={() => startBackgroundTest(seconds)}
                   >
@@ -1405,22 +1419,22 @@ function AppContent() {
               </div>
               
               {/* Browser Notification Status */}
-              <div className="mt-3 p-3 bg-[#0a0a0f] border-2 border-[#ffd700]/50">
+              <div className={`mt-3 p-3 ${isGamingMode ? 'bg-[#0a0a0f] border-2 border-[#ffd700]/50' : 'bg-background border border-border rounded-lg'}`}>
                 <div className="flex items-center justify-between flex-wrap gap-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-pixel text-[#ffd700]">📢 NOTIFIKASI DESKTOP:</span>
+                    <span className={`text-xs ${isGamingMode ? 'font-pixel text-[#ffd700]' : 'text-primary font-semibold'}`}>📢 NOTIFIKASI DESKTOP:</span>
                     {typeof Notification !== 'undefined' && typeof Notification.requestPermission === 'function' ? (
-                      <span className={`text-[10px] px-2 py-0.5 border-2 ${
+                      <span className={`text-xs px-2 py-0.5 ${isGamingMode ? 'border-2' : 'border rounded'} ${
                         Notification.permission === 'granted' 
-                          ? 'border-[#39ff14] text-[#39ff14] bg-[#39ff14]/10' 
+                          ? isGamingMode ? 'border-[#39ff14] text-[#39ff14] bg-[#39ff14]/10' : 'border-green-500 text-green-600 bg-green-100 dark:bg-green-900/20 dark:text-green-400'
                           : Notification.permission === 'denied'
-                          ? 'border-[#ff0040] text-[#ff0040] bg-[#ff0040]/10'
-                          : 'border-[#ffd700] text-[#ffd700] bg-[#ffd700]/10'
+                          ? isGamingMode ? 'border-[#ff0040] text-[#ff0040] bg-[#ff0040]/10' : 'border-red-500 text-red-600 bg-red-100 dark:bg-red-900/20 dark:text-red-400'
+                          : isGamingMode ? 'border-[#ffd700] text-[#ffd700] bg-[#ffd700]/10' : 'border-yellow-500 text-yellow-600 bg-yellow-100 dark:bg-yellow-900/20 dark:text-yellow-400'
                       }`}>
                         {Notification.permission === 'granted' ? '✓ AKTIF' : Notification.permission === 'denied' ? '✗ DIBLOKIR' : '? BELUM AKTIF'}
                       </span>
                     ) : (
-                      <span className="text-[10px] px-2 py-0.5 border-2 border-[#8888aa] text-[#8888aa]">
+                      <span className={`text-xs px-2 py-0.5 ${isGamingMode ? 'border-2 border-[#8888aa] text-[#8888aa]' : 'border border-muted-foreground text-muted-foreground rounded'}`}>
                         ⚠ TIDAK TERSEDIA
                       </span>
                     )}
@@ -1428,7 +1442,7 @@ function AppContent() {
                   {typeof Notification !== 'undefined' && typeof Notification.requestPermission === 'function' && Notification.permission !== 'granted' && (
                     <Button
                       size="sm"
-                      className="text-[10px] px-3 py-1 bg-[#ffd700] text-[#0a0a0f] hover:bg-[#ffd700]/80 font-bold"
+                      className={`text-xs px-3 py-1 font-bold ${isGamingMode ? 'bg-[#ffd700] text-[#0a0a0f] hover:bg-[#ffd700]/80' : 'bg-primary text-primary-foreground hover:bg-primary/90'}`}
                       onClick={async () => {
                         try {
                           const permission = await Notification.requestPermission()
@@ -1455,11 +1469,11 @@ function AppContent() {
                     </Button>
                   )}
                 </div>
-                <div className="text-[9px] text-[#8888aa] mt-2">
+                <div className={`text-xs mt-2 ${isGamingMode ? 'text-[#8888aa]' : 'text-muted-foreground'}`}>
                   {typeof Notification === 'undefined' || typeof Notification.requestPermission !== 'function' ? (
-                    <span className="text-[#ffd700]">
+                    <span className={isGamingMode ? 'text-[#ffd700]' : 'text-yellow-600 dark:text-yellow-400'}>
                       ⚠️ Browser Notification tidak tersedia di mode preview/sandbox.
-                      <strong className="text-[#39ff14]"> Buka di tab baru</strong> untuk mengaktifkan notifikasi desktop.
+                      <strong className={isGamingMode ? 'text-[#39ff14]' : 'text-green-600 dark:text-green-400'}> Buka di tab baru</strong> untuk mengaktifkan notifikasi desktop.
                     </span>
                   ) : Notification.permission === 'granted' 
                     ? '✅ Notifikasi desktop aktif. Alarm akan muncul meski Anda di tab lain!'
@@ -1467,7 +1481,7 @@ function AppContent() {
                     ? '❌ Notifikasi diblokir. Buka Settings browser → Site Settings → Notifications → Allow'
                     : '⚠️ Klik tombol di atas untuk mengaktifkan notifikasi desktop'}
                 </div>
-                <div className="text-[9px] text-[#39ff14] mt-1">
+                <div className={`text-xs mt-1 ${isGamingMode ? 'text-[#39ff14]' : 'text-green-600 dark:text-green-400'}`}>
                   💡 <strong>Catatan:</strong> Toast notification (pojok kanan bawah) selalu berfungsi meski di sandbox!
                 </div>
               </div>
@@ -1477,13 +1491,13 @@ function AppContent() {
                 <motion.div 
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="mt-3 p-3 bg-[#00fff7]/10 border-2 border-[#00fff7] text-center"
+                  className={`mt-3 p-3 text-center ${isGamingMode ? 'bg-[#00fff7]/10 border-2 border-[#00fff7]' : 'bg-primary/10 border border-primary rounded-lg'}`}
                 >
-                  <div className="text-[10px] text-[#00fff7] font-pixel mb-1">⏰ ALARM DALAM:</div>
-                  <div className="text-3xl font-mono font-bold text-[#00fff7] neon-text-cyan">
+                  <div className={`text-xs mb-1 ${isGamingMode ? 'text-[#00fff7] font-pixel' : 'text-primary font-semibold'}`}>⏰ ALARM DALAM:</div>
+                  <div className={`text-3xl font-mono font-bold ${isGamingMode ? 'text-[#00fff7] neon-text-cyan' : 'text-primary'}`}>
                     {backgroundTestCountdown}
                   </div>
-                  <div className="text-[10px] text-[#8888aa] mt-1">
+                  <div className={`text-xs mt-1 ${isGamingMode ? 'text-[#8888aa]' : 'text-muted-foreground'}`}>
                     💡 Pindah tab/minimize browser sekarang!
                   </div>
                 </motion.div>
@@ -1491,8 +1505,8 @@ function AppContent() {
             </div>
             
             {/* Tips */}
-            <div className="text-[10px] text-[#b8b8c8] bg-[#0a0a0f]/50 p-2 border-2 border-[#ff0040]/30">
-              <div className="font-bold text-[#ffd700] mb-1">💡 CARA TEST NOTIFIKASI BACKGROUND:</div>
+            <div className={`text-xs p-2 ${isGamingMode ? 'text-[#b8b8c8] bg-[#0a0a0f]/50 border-2 border-[#ff0040]/30' : 'text-muted-foreground bg-muted/50 border border-border rounded-lg'}`}>
+              <div className={`font-bold mb-1 ${isGamingMode ? 'text-[#ffd700]' : 'text-primary'}`}>💡 CARA TEST NOTIFIKASI BACKGROUND:</div>
               <ol className="list-decimal list-inside space-y-0.5">
                 <li>Klik <strong>"🔔 AKTIFKAN NOTIF"</strong> di atas (jika belum aktif)</li>
                 <li>Klik timer <strong>(5s/10s/15s/30s)</strong></li>
@@ -1509,15 +1523,15 @@ function AppContent() {
         <motion.div 
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-[#ff0040]/20 border-b-4 border-[#ff0040] px-4 py-3"
+          className={`${isGamingMode ? 'bg-[#ff0040]/20 border-b-4 border-[#ff0040]' : 'bg-red-50 dark:bg-red-900/10 border-b border-red-500'} px-4 py-3`}
         >
           <div className="max-w-4xl mx-auto">
             <div className="flex items-center gap-3 mb-3">
-              <div className="flex items-center gap-2 px-3 py-1 bg-[#ff0040] animate-pulse">
+              <div className={`flex items-center gap-2 px-3 py-1 animate-pulse ${isGamingMode ? 'bg-[#ff0040]' : 'bg-red-500 rounded-full'}`}>
                 <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
-                <span className="text-[10px] font-pixel text-white uppercase tracking-wider">LIVE NOW</span>
+                <span className={`text-xs uppercase tracking-wider ${isGamingMode ? 'font-pixel text-white' : 'text-white font-semibold'}`}>LIVE NOW</span>
               </div>
-              <span className="text-sm text-[#b8b8c8]">{liveEvents.length} event sedang berlangsung</span>
+              <span className={`text-sm ${isGamingMode ? 'text-[#b8b8c8]' : 'text-muted-foreground'}`}>{liveEvents.length} event sedang berlangsung</span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {liveEvents.map(event => (
@@ -1525,7 +1539,7 @@ function AppContent() {
                   key={event.id}
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="flex items-center gap-3 p-2 border-2 border-[#ff0040] bg-[#ff0040]/10 hover:bg-[#ff0040]/20 cursor-pointer transition-colors"
+                  className={`flex items-center gap-3 p-2 cursor-pointer transition-colors ${isGamingMode ? 'border-2 border-[#ff0040] bg-[#ff0040]/10 hover:bg-[#ff0040]/20' : 'border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg'}`}
                   onClick={() => {
                     setSelectedEvent(event)
                     setEventDetailOpen(true)
@@ -1535,20 +1549,20 @@ function AppContent() {
                     <img 
                       src={event.icon} 
                       alt={event.name}
-                      className="w-10 h-10 border-2 border-[#ff0040]"
+                      className={`w-10 h-10 ${isGamingMode ? 'border-2 border-[#ff0040]' : 'border border-red-300 rounded-lg'}`}
                       style={{ imageRendering: 'pixelated' }}
                     />
                   )}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-pixel text-[#ff0040] truncate">{event.name}</span>
-                      <div className="w-2 h-2 bg-[#ff0040] rounded-full animate-pulse" />
+                      <span className={`text-xs truncate ${isGamingMode ? 'font-pixel text-[#ff0040]' : 'text-red-600 dark:text-red-400 font-semibold'}`}>{event.name}</span>
+                      <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
                     </div>
-                    <span className="text-[10px] text-[#8888aa]">{formatTimeWithLabel(event.timeUTC)}</span>
+                    <span className={`text-xs ${isGamingMode ? 'text-[#8888aa]' : 'text-muted-foreground'}`}>{formatTimeWithLabel(event.timeUTC)}</span>
                   </div>
                   <Button
                     size="sm"
-                    className="text-[10px] px-2 py-1 bg-[#ff0040] text-white hover:bg-[#ff0040]/80 border-0"
+                    className={`text-xs px-2 py-1 border-0 ${isGamingMode ? 'bg-[#ff0040] text-white hover:bg-[#ff0040]/80' : 'bg-red-500 text-white hover:bg-red-600'}`}
                     onClick={(e) => {
                       e.stopPropagation()
                       window.open(event.link || 'https://discord.gg/genlayer', '_blank')
@@ -1568,20 +1582,20 @@ function AppContent() {
         <motion.div 
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-[#ff0040]/20 border-b-4 border-[#ff0040] px-4 py-3"
+          className={`${isGamingMode ? 'bg-[#ff0040]/20 border-b-4 border-[#ff0040]' : 'bg-red-50 dark:bg-red-900/10 border-b border-red-500'} px-4 py-3`}
         >
           <div className="max-w-4xl mx-auto">
             <div className="flex items-center gap-3 mb-2">
-              <div className="flex items-center gap-2 px-3 py-1 bg-[#ff0040] animate-pulse">
+              <div className={`flex items-center gap-2 px-3 py-1 animate-pulse ${isGamingMode ? 'bg-[#ff0040]' : 'bg-red-500 rounded-full'}`}>
                 <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
-                <span className="text-[10px] font-pixel text-white uppercase tracking-wider">🧪 DEMO LIVE</span>
+                <span className={`text-xs uppercase tracking-wider ${isGamingMode ? 'font-pixel text-white' : 'text-white font-semibold'}`}>🧪 DEMO LIVE</span>
               </div>
-              <span className="text-sm text-[#b8b8c8]">Event yang dipilih sedang berlangsung</span>
+              <span className={`text-sm ${isGamingMode ? 'text-[#b8b8c8]' : 'text-muted-foreground'}`}>Event yang dipilih sedang berlangsung</span>
             </div>
             <div className="flex items-center gap-3">
               <Button
                 size="sm"
-                className="text-xs px-4 py-2 border-2 border-[#ff0040] text-[#ff0040] bg-transparent hover:bg-[#ff0040]/20"
+                className={`text-xs px-4 py-2 ${isGamingMode ? 'border-2 border-[#ff0040] text-[#ff0040] bg-transparent hover:bg-[#ff0040]/20' : 'border border-red-500 text-red-500 bg-transparent hover:bg-red-50 dark:hover:bg-red-900/20'}`}
                 onClick={() => {
                   setSelectedEvent(manualLiveEvent)
                   setEventDetailOpen(true)
@@ -1591,7 +1605,7 @@ function AppContent() {
               </Button>
               <Button
                 size="sm"
-                className="text-xs px-3 py-2 bg-[#ff0040] text-white hover:bg-[#ff0040]/80"
+                className={`text-xs px-3 py-2 ${isGamingMode ? 'bg-[#ff0040] text-white hover:bg-[#ff0040]/80' : 'bg-red-500 text-white hover:bg-red-600'}`}
                 onClick={() => {
                   window.open(manualLiveEvent.link || 'https://discord.gg/genlayer', '_blank')
                 }}
@@ -1611,39 +1625,43 @@ function AppContent() {
           <motion.div
             initial={{ opacity: 0, y: -20, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            className="border-4 border-[#00fff7] bg-[#12121a] p-5 relative overflow-hidden pixel-shadow"
+            className={`p-5 relative overflow-hidden ${isGamingMode ? 'border-4 border-[#00fff7] bg-[#12121a] pixel-shadow' : 'border border-primary bg-card rounded-xl shadow-sm'}`}
           >
-            {/* Corner decorations */}
-            <div className="absolute top-0 left-0 w-4 h-4 bg-[#00fff7]" />
-            <div className="absolute top-0 right-0 w-4 h-4 bg-[#00fff7]" />
-            <div className="absolute bottom-0 left-0 w-4 h-4 bg-[#00fff7]" />
-            <div className="absolute bottom-0 right-0 w-4 h-4 bg-[#00fff7]" />
-            
-            {/* Inner corner accents */}
-            <div className="absolute top-0 left-0 w-8 h-8 border-r-2 border-b-2 border-[#00fff7]/30" />
-            <div className="absolute top-0 right-0 w-8 h-8 border-l-2 border-b-2 border-[#00fff7]/30" />
-            <div className="absolute bottom-0 left-0 w-8 h-8 border-r-2 border-t-2 border-[#00fff7]/30" />
-            <div className="absolute bottom-0 right-0 w-8 h-8 border-l-2 border-t-2 border-[#00fff7]/30" />
+            {/* Corner decorations - only in gaming mode */}
+            {isGamingMode && (
+              <>
+                <div className="absolute top-0 left-0 w-4 h-4 bg-[#00fff7]" />
+                <div className="absolute top-0 right-0 w-4 h-4 bg-[#00fff7]" />
+                <div className="absolute bottom-0 left-0 w-4 h-4 bg-[#00fff7]" />
+                <div className="absolute bottom-0 right-0 w-4 h-4 bg-[#00fff7]" />
+                
+                {/* Inner corner accents */}
+                <div className="absolute top-0 left-0 w-8 h-8 border-r-2 border-b-2 border-[#00fff7]/30" />
+                <div className="absolute top-0 right-0 w-8 h-8 border-l-2 border-b-2 border-[#00fff7]/30" />
+                <div className="absolute bottom-0 left-0 w-8 h-8 border-r-2 border-t-2 border-[#00fff7]/30" />
+                <div className="absolute bottom-0 right-0 w-8 h-8 border-l-2 border-t-2 border-[#00fff7]/30" />
+              </>
+            )}
 
             <div className="flex items-center gap-2 mb-4">
               {isEventLive(nextEvent) ? (
                 <>
-                  <div className="flex items-center gap-2 px-3 py-1 bg-[#ff0040] animate-pulse">
+                  <div className={`flex items-center gap-2 px-3 py-1 animate-pulse ${isGamingMode ? 'bg-[#ff0040]' : 'bg-red-500 rounded-full'}`}>
                     <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
-                    <span className="text-[10px] font-pixel text-white uppercase tracking-wider">LIVE</span>
+                    <span className={`text-xs uppercase tracking-wider ${isGamingMode ? 'font-pixel text-white' : 'text-white font-semibold'}`}>LIVE</span>
                   </div>
-                  <span className="text-sm text-[#ff0040] font-pixel">Event sedang berlangsung!</span>
+                  <span className={`text-sm ${isGamingMode ? 'text-[#ff0040] font-pixel' : 'text-red-500 font-semibold'}`}>Event sedang berlangsung!</span>
                 </>
               ) : (
                 <>
-                  <Zap className="w-5 h-5 text-[#ffff00] pulse-neon" />
-                  <span className="text-[10px] font-pixel text-[#ffff00] uppercase tracking-wider">
+                  <Zap className={`w-5 h-5 ${isGamingMode ? 'text-[#ffff00] pulse-neon' : 'text-yellow-500'}`} />
+                  <span className={`text-xs uppercase tracking-wider ${isGamingMode ? 'font-pixel text-[#ffff00]' : 'text-yellow-600 dark:text-yellow-400 font-semibold'}`}>
                     {t('nextEvent')}
                   </span>
                 </>
               )}
               {isClient && alarmedEvents.has(nextEvent.id) && (
-                <span className="ml-auto text-[10px] px-3 py-1 border-2 border-[#39ff14] text-[#39ff14] font-pixel bg-[#39ff14]/10">
+                <span className={`ml-auto text-xs px-3 py-1 ${isGamingMode ? 'border-2 border-[#39ff14] text-[#39ff14] font-pixel bg-[#39ff14]/10' : 'border border-green-500 text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/20 rounded-full'}`}>
                   <Bell className="w-3 h-3 inline mr-1" /> {t('alarmSet')}
                 </span>
               )}
@@ -1656,29 +1674,31 @@ function AppContent() {
                     <img 
                       src={nextEvent.icon} 
                       alt={nextEvent.name}
-                      className="w-16 h-16 border-3 border-[#00fff7] pixel-shadow"
+                      className={`w-16 h-16 ${isGamingMode ? 'border-3 border-[#00fff7] pixel-shadow' : 'border border-border rounded-lg'}`}
                       style={{ imageRendering: 'pixelated' }}
                     />
-                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-[#39ff14] animate-pulse" />
+                    {isGamingMode && (
+                      <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-[#39ff14] animate-pulse" />
+                    )}
                   </div>
                 )}
                 <div>
-                  <h2 className="text-sm font-pixel neon-text-cyan mb-2">{nextEvent.name}</h2>
-                  <div className="flex items-center gap-4 text-[#8888aa] text-base">
+                  <h2 className={`text-base font-bold mb-2 ${isGamingMode ? 'text-sm font-pixel neon-text-cyan' : 'text-foreground'}`}>{nextEvent.name}</h2>
+                  <div className={`flex items-center gap-4 text-base ${isGamingMode ? 'text-[#8888aa]' : 'text-muted-foreground'}`}>
                     <span className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-[#00fff7]" />
-                      <span className="text-[#00fff7] font-pixel">{formatTimeWithLabel(nextEvent.timeUTC)}</span>
+                      <Clock className={`w-4 h-4 ${isGamingMode ? 'text-[#00fff7]' : 'text-primary'}`} />
+                      <span className={isGamingMode ? 'text-[#00fff7] font-pixel' : 'text-foreground'}>{formatTimeWithLabel(nextEvent.timeUTC)}</span>
                     </span>
                     <span className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-[#ff00ff]" />
-                      <span className="text-[#ff00ff]">{getDayName(nextEvent.day)}</span>
+                      <Calendar className={`w-4 h-4 ${isGamingMode ? 'text-[#ff00ff]' : 'text-primary'}`} />
+                      <span className={isGamingMode ? 'text-[#ff00ff]' : 'text-foreground'}>{getDayName(nextEvent.day)}</span>
                     </span>
                   </div>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <span 
-                  className="text-sm font-pixel px-4 py-2 border-3"
+                  className={`text-sm px-4 py-2 ${isGamingMode ? 'font-pixel border-3' : 'rounded-lg border font-medium'}`}
                   style={{ 
                     borderColor: nextEvent.roleColor,
                     color: nextEvent.roleColor,
@@ -1693,23 +1713,25 @@ function AppContent() {
             {/* Countdown */}
             <div className="mt-6 grid grid-cols-4 gap-3">
               {[
-                { value: countdown.days, label: t('days'), color: '#00fff7' },
-                { value: countdown.hours, label: t('hours'), color: '#ff00ff' },
-                { value: countdown.minutes, label: t('min'), color: '#39ff14' },
-                { value: countdown.seconds, label: t('sec'), color: '#ffd700' },
+                { value: countdown.days, label: t('days'), color: isGamingMode ? '#00fff7' : undefined },
+                { value: countdown.hours, label: t('hours'), color: isGamingMode ? '#ff00ff' : undefined },
+                { value: countdown.minutes, label: t('min'), color: isGamingMode ? '#39ff14' : undefined },
+                { value: countdown.seconds, label: t('sec'), color: isGamingMode ? '#ffd700' : undefined },
               ].map((item, i) => (
                 <motion.div 
                   key={i} 
                   initial={{ scale: 0.9, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: i * 0.1 }}
-                  className="p-3 border-3 border-[#2a2a4e] bg-[#0a0a0f] text-center relative overflow-hidden"
+                  className={`p-3 text-center relative overflow-hidden ${isGamingMode ? 'border-3 border-[#2a2a4e] bg-[#0a0a0f]' : 'border border-border bg-background rounded-lg'}`}
                 >
-                  <div className="absolute top-0 left-0 right-0 h-1" style={{ backgroundColor: item.color }} />
-                  <div className="text-2xl font-mono font-bold" style={{ color: item.color }}>
+                  {isGamingMode && item.color && (
+                    <div className="absolute top-0 left-0 right-0 h-1" style={{ backgroundColor: item.color }} />
+                  )}
+                  <div className={`text-2xl font-mono font-bold ${isGamingMode ? '' : 'text-primary'}`} style={isGamingMode && item.color ? { color: item.color } : undefined}>
                     {String(item.value).padStart(2, '0')}
                   </div>
-                  <div className="text-[10px] text-[#8888aa] mt-1 font-pixel">{item.label}</div>
+                  <div className={`text-xs mt-1 ${isGamingMode ? 'text-[#8888aa] font-pixel' : 'text-muted-foreground'}`}>{item.label}</div>
                 </motion.div>
               ))}
             </div>
@@ -1717,21 +1739,21 @@ function AppContent() {
             {/* XP Rewards */}
             {nextEvent.xpRewards.length > 0 && (
               <div className="mt-5 space-y-2">
-                <div className="flex items-center justify-between p-2 border-3 border-[#ffd700] bg-[#ffd700]/10">
-                  <h4 className="text-[10px] font-pixel flex items-center gap-2 text-[#ffd700]">
+                <div className={`flex items-center justify-between p-2 ${isGamingMode ? 'border-3 border-[#ffd700] bg-[#ffd700]/10' : 'border border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg'}`}>
+                  <h4 className={`text-xs flex items-center gap-2 ${isGamingMode ? 'font-pixel text-[#ffd700]' : 'text-yellow-600 dark:text-yellow-400 font-semibold'}`}>
                     <Trophy className="w-4 h-4" />
                     <span>{t('xpRewards')}</span>
                   </h4>
-                  <span className="text-xs font-pixel text-[#ffd700] neon-text-gold">
+                  <span className={`text-xs ${isGamingMode ? 'font-pixel text-[#ffd700] neon-text-gold' : 'text-yellow-600 dark:text-yellow-400 font-semibold'}`}>
                     MAX: {getMaxXP(nextEvent).toLocaleString('en-US')} XP
                   </span>
                 </div>
-                <div className="p-2 border-3 border-[#2a2a4e] bg-[#0a0a0f] max-h-32 overflow-y-auto custom-scrollbar">
+                <div className={`p-2 max-h-32 overflow-y-auto custom-scrollbar ${isGamingMode ? 'border-3 border-[#2a2a4e] bg-[#0a0a0f]' : 'border border-border bg-background rounded-lg'}`}>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1">
                     {nextEvent.xpRewards.map((reward, idx) => (
-                      <div key={idx} className="flex items-center justify-between text-sm p-1 hover:bg-[#39ff14]/10">
-                        <span className="text-[#8888aa]">{reward.position}</span>
-                        <span className="font-bold text-[#39ff14]">
+                      <div key={idx} className={`flex items-center justify-between text-sm p-1 ${isGamingMode ? 'hover:bg-[#39ff14]/10' : 'hover:bg-muted/50 rounded'}`}>
+                        <span className={isGamingMode ? 'text-[#8888aa]' : 'text-muted-foreground'}>{reward.position}</span>
+                        <span className={`font-bold ${isGamingMode ? 'text-[#39ff14]' : 'text-green-600 dark:text-green-400'}`}>
                           {reward.xp > 0 ? `${reward.xp.toLocaleString('en-US')} XP` : 'XP'}
                         </span>
                       </div>
@@ -1744,7 +1766,7 @@ function AppContent() {
             {/* Action Buttons */}
             <div className="mt-5 flex flex-col sm:flex-row gap-3">
               <Button
-                className="flex-1 border-3 border-[#00fff7] bg-[#00fff7] text-[#0a0a0f] hover:bg-[#39ff14] hover:border-[#39ff14] font-pixel text-xs pixel-button"
+                className={`flex-1 text-xs ${isGamingMode ? 'border-3 border-[#00fff7] bg-[#00fff7] text-[#0a0a0f] hover:bg-[#39ff14] hover:border-[#39ff14] font-pixel pixel-button' : 'bg-primary text-primary-foreground hover:bg-primary/90'}`}
                 onClick={() => toggleEventAlarm(nextEvent.id)}
               >
                 {isClient && alarmedEvents.has(nextEvent.id) ? (
@@ -1762,7 +1784,7 @@ function AppContent() {
               
               <Button
                 variant="outline"
-                className="border-3 border-[#ff00ff] text-[#ff00ff] hover:bg-[#ff00ff]/20 font-pixel text-xs pixel-button bg-transparent"
+                className={`text-xs ${isGamingMode ? 'border-3 border-[#ff00ff] text-[#ff00ff] hover:bg-[#ff00ff]/20 font-pixel pixel-button bg-transparent' : ''}`}
                 onClick={() => {
                   window.open(nextEvent.link || 'https://discord.gg/genlayer', '_blank')
                 }}
@@ -1775,17 +1797,21 @@ function AppContent() {
         )}
 
         {/* Today's Events */}
-        <div className="border-4 border-[#ff00ff] bg-[#12121a] p-5 relative pixel-shadow">
-          <div className="absolute top-0 left-0 w-4 h-4 bg-[#ff00ff]" />
-          <div className="absolute top-0 right-0 w-4 h-4 bg-[#ff00ff]" />
-          <div className="absolute bottom-0 left-0 w-4 h-4 bg-[#ff00ff]" />
-          <div className="absolute bottom-0 right-0 w-4 h-4 bg-[#ff00ff]" />
+        <div className={`p-5 relative ${isGamingMode ? 'border-4 border-[#ff00ff] bg-[#12121a] pixel-shadow' : 'border border-border bg-card rounded-xl shadow-sm'}`}>
+          {isGamingMode && (
+            <>
+              <div className="absolute top-0 left-0 w-4 h-4 bg-[#ff00ff]" />
+              <div className="absolute top-0 right-0 w-4 h-4 bg-[#ff00ff]" />
+              <div className="absolute bottom-0 left-0 w-4 h-4 bg-[#ff00ff]" />
+              <div className="absolute bottom-0 right-0 w-4 h-4 bg-[#ff00ff]" />
+            </>
+          )}
           
-          <div className="flex items-center gap-3 mb-4 border-b-3 border-[#2a2a4e] pb-3">
-            <div className="w-8 h-8 border-2 border-[#ff00ff] flex items-center justify-center">
-              <Calendar className="w-4 h-4 text-[#ff00ff]" />
+          <div className={`flex items-center gap-3 mb-4 pb-3 ${isGamingMode ? 'border-b-3 border-[#2a2a4e]' : 'border-b border-border'}`}>
+            <div className={`w-8 h-8 flex items-center justify-center ${isGamingMode ? 'border-2 border-[#ff00ff]' : 'border border-border rounded-lg bg-muted'}`}>
+              <Calendar className={`w-4 h-4 ${isGamingMode ? 'text-[#ff00ff]' : 'text-primary'}`} />
             </div>
-            <h3 className="text-[10px] font-pixel neon-text-magenta">{t('todayEvents')} ({todayEvents.length})</h3>
+            <h3 className={`text-sm font-semibold ${isGamingMode ? 'text-[10px] font-pixel neon-text-magenta' : 'text-foreground'}`}>{t('todayEvents')} ({todayEvents.length})</h3>
           </div>
           <div className="space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
             {todayEvents.slice(0, 5).map((event, index) => (
@@ -1794,7 +1820,9 @@ function AppContent() {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className={`flex items-center justify-between p-3 border-3 transition-all cursor-pointer ${isEventLive(event) ? 'border-[#ff0040] bg-[#ff0040]/10' : 'border-[#2a2a4e] hover:border-[#ff00ff] hover:bg-[#ff00ff]/5'}`}
+                className={`flex items-center justify-between p-3 transition-all cursor-pointer ${isGamingMode 
+                  ? `border-3 ${isEventLive(event) ? 'border-[#ff0040] bg-[#ff0040]/10' : 'border-[#2a2a4e] hover:border-[#ff00ff] hover:bg-[#ff00ff]/5'}` 
+                  : `${isEventLive(event) ? 'border border-red-500 bg-red-50 dark:bg-red-900/20' : 'border border-border hover:border-primary hover:bg-muted/50'} rounded-lg`}`}
                 onClick={() => openEventDetail(event)}
               >
                 <div className="flex items-center gap-3">
@@ -1803,7 +1831,7 @@ function AppContent() {
                       <img 
                         src={event.icon} 
                         alt={event.name}
-                        className="w-10 h-10 border-2 border-[#ff00ff]"
+                        className={`w-10 h-10 ${isGamingMode ? 'border-2 border-[#ff00ff]' : 'border border-border rounded-lg'}`}
                         style={{ imageRendering: 'pixelated' }}
                       />
                       {isEventLive(event) && (
@@ -1811,18 +1839,18 @@ function AppContent() {
                       )}
                     </div>
                   )}
-                  <Clock className="w-4 h-4 text-[#8888aa]" />
-                  <span className="text-sm text-[#00fff7] font-pixel">{formatTimeWithLabel(event.timeUTC)}</span>
+                  <Clock className={`w-4 h-4 ${isGamingMode ? 'text-[#8888aa]' : 'text-muted-foreground'}`} />
+                  <span className={`text-sm ${isGamingMode ? 'text-[#00fff7] font-pixel' : 'text-primary'}`}>{formatTimeWithLabel(event.timeUTC)}</span>
                   <span className="text-base truncate max-w-[120px]">{event.name}</span>
                   {isEventLive(event) && (
-                    <span className="px-2 py-0.5 bg-[#ff0040] text-white text-[8px] font-pixel uppercase animate-pulse">LIVE</span>
+                    <span className={`px-2 py-0.5 text-white text-xs uppercase animate-pulse ${isGamingMode ? 'bg-[#ff0040] font-pixel' : 'bg-red-500 rounded-full font-semibold'}`}>LIVE</span>
                   )}
                   {isClient && alarmedEvents.has(event.id) && !isEventLive(event) && (
-                    <Bell className="w-4 h-4 text-[#39ff14] animate-pulse" />
+                    <Bell className={`w-4 h-4 animate-pulse ${isGamingMode ? 'text-[#39ff14]' : 'text-green-500'}`} />
                   )}
                 </div>
                 <span 
-                  className="text-[10px] px-3 py-1 border-2 font-pixel"
+                  className={`text-xs px-3 py-1 ${isGamingMode ? 'border-2 font-pixel' : 'border rounded-lg'}`}
                   style={{ 
                     borderColor: event.roleColor,
                     color: event.roleColor,
@@ -1833,39 +1861,43 @@ function AppContent() {
               </motion.div>
             ))}
             {todayEvents.length === 0 && (
-              <div className="p-4 text-center border-3 border-dashed border-[#2a2a4e]">
-                <p className="text-sm text-[#8888aa]">[{t('noEventsToday')}]</p>
+              <div className={`p-4 text-center ${isGamingMode ? 'border-3 border-dashed border-[#2a2a4e]' : 'border border-dashed border-border rounded-lg'}`}>
+                <p className={`text-sm ${isGamingMode ? 'text-[#8888aa]' : 'text-muted-foreground'}`}>[{t('noEventsToday')}]</p>
               </div>
             )}
           </div>
         </div>
 
         {/* Event Schedule */}
-        <div className="border-4 border-[#39ff14] bg-[#12121a] p-5 relative pixel-shadow">
-          <div className="absolute top-0 left-0 w-4 h-4 bg-[#39ff14]" />
-          <div className="absolute top-0 right-0 w-4 h-4 bg-[#39ff14]" />
-          <div className="absolute bottom-0 left-0 w-4 h-4 bg-[#39ff14]" />
-          <div className="absolute bottom-0 right-0 w-4 h-4 bg-[#39ff14]" />
+        <div className={`p-5 relative ${isGamingMode ? 'border-4 border-[#39ff14] bg-[#12121a] pixel-shadow' : 'border border-border bg-card rounded-xl shadow-sm'}`}>
+          {isGamingMode && (
+            <>
+              <div className="absolute top-0 left-0 w-4 h-4 bg-[#39ff14]" />
+              <div className="absolute top-0 right-0 w-4 h-4 bg-[#39ff14]" />
+              <div className="absolute bottom-0 left-0 w-4 h-4 bg-[#39ff14]" />
+              <div className="absolute bottom-0 right-0 w-4 h-4 bg-[#39ff14]" />
+            </>
+          )}
           
-          <div className="flex items-center gap-3 mb-4 border-b-3 border-[#2a2a4e] pb-3">
-            <div className="w-8 h-8 border-2 border-[#39ff14] flex items-center justify-center">
-              <Gamepad2 className="w-4 h-4 text-[#39ff14]" />
+          <div className={`flex items-center gap-3 mb-4 pb-3 ${isGamingMode ? 'border-b-3 border-[#2a2a4e]' : 'border-b border-border'}`}>
+            <div className={`w-8 h-8 flex items-center justify-center ${isGamingMode ? 'border-2 border-[#39ff14]' : 'border border-border rounded-lg bg-muted'}`}>
+              <Gamepad2 className={`w-4 h-4 ${isGamingMode ? 'text-[#39ff14]' : 'text-primary'}`} />
             </div>
-            <h3 className="text-[10px] font-pixel neon-text-lime">{t('eventSchedule')}</h3>
+            <h3 className={`text-sm font-semibold ${isGamingMode ? 'text-[10px] font-pixel neon-text-lime' : 'text-foreground'}`}>{t('eventSchedule')}</h3>
           </div>
           
           <Tabs value={selectedDay} onValueChange={setSelectedDay} className="w-full">
-            <TabsList className="bg-[#0a0a0f] border-3 border-[#2a2a4e] w-full justify-start flex-wrap h-auto gap-0.5 p-1 mb-4">
+            <TabsList className={`w-full justify-start flex-wrap h-auto gap-0.5 p-1 mb-4 ${isGamingMode ? 'bg-[#0a0a0f] border-3 border-[#2a2a4e]' : 'bg-muted'}`}>
               {DAYS.map((day) => {
                 const isToday = day === getCurrentUTCDay()
                 return (
                   <TabsTrigger 
                     key={day} 
                     value={day}
-                    className="text-[10px] px-3 py-2 font-pixel data-[state=active]:bg-[#39ff14] data-[state=active]:text-[#0a0a0f]"
+                    className={`text-xs px-3 py-2 ${isGamingMode ? 'font-pixel data-[state=active]:bg-[#39ff14] data-[state=active]:text-[#0a0a0f]' : ''}`}
                   >
                     {getDayName(day)}
-                    {isToday && <span className="ml-2 w-2 h-2 bg-[#ffd700] inline-block animate-pulse" />}
+                    {isToday && <span className={`ml-2 w-2 h-2 inline-block animate-pulse ${isGamingMode ? 'bg-[#ffd700]' : 'bg-primary rounded-full'}`} />}
                   </TabsTrigger>
                 )
               })}
@@ -1879,7 +1911,9 @@ function AppContent() {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.03 }}
-                className={`p-3 border-3 transition-all cursor-pointer ${isEventLive(event) ? 'border-[#ff0040] bg-[#ff0040]/10' : 'border-[#2a2a4e] hover:border-[#39ff14] hover:bg-[#39ff14]/5'}`}
+                className={`p-3 transition-all cursor-pointer ${isGamingMode 
+                  ? `border-3 ${isEventLive(event) ? 'border-[#ff0040] bg-[#ff0040]/10' : 'border-[#2a2a4e] hover:border-[#39ff14] hover:bg-[#39ff14]/5'}`
+                  : `${isEventLive(event) ? 'border border-red-500 bg-red-50 dark:bg-red-900/20' : 'border border-border hover:border-primary hover:bg-muted/50'} rounded-lg`}`}
                 onClick={() => openEventDetail(event)}
               >
                 <div className="flex items-start justify-between gap-3">
@@ -1889,7 +1923,7 @@ function AppContent() {
                         <img 
                           src={event.icon} 
                           alt={event.name}
-                          className="w-12 h-12 border-2 border-[#39ff14] pixel-shadow"
+                          className={`w-12 h-12 ${isGamingMode ? 'border-2 border-[#39ff14] pixel-shadow' : 'border border-border rounded-lg'}`}
                           style={{ imageRendering: 'pixelated' }}
                         />
                         {isEventLive(event) && (
@@ -1899,21 +1933,21 @@ function AppContent() {
                     )}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3">
-                        <Clock className="w-4 h-4 text-[#00fff7]" />
-                        <span className="text-sm font-pixel text-[#00fff7]">{formatTimeWithLabel(event.timeUTC)}</span>
+                        <Clock className={`w-4 h-4 ${isGamingMode ? 'text-[#00fff7]' : 'text-primary'}`} />
+                        <span className={`text-sm ${isGamingMode ? 'font-pixel text-[#00fff7]' : 'text-primary'}`}>{formatTimeWithLabel(event.timeUTC)}</span>
                         {isEventLive(event) && (
-                          <span className="px-2 py-0.5 bg-[#ff0040] text-white text-[8px] font-pixel uppercase animate-pulse">LIVE</span>
+                          <span className={`px-2 py-0.5 text-white text-xs uppercase animate-pulse ${isGamingMode ? 'bg-[#ff0040] font-pixel' : 'bg-red-500 rounded-full font-semibold'}`}>LIVE</span>
                         )}
                         {event.isSpecial && (
-                          <span className="text-[#ffd700] animate-pulse">★</span>
+                          <span className={`${isGamingMode ? 'text-[#ffd700]' : 'text-yellow-500'} animate-pulse`}>★</span>
                         )}
                         {isClient && alarmedEvents.has(event.id) && !isEventLive(event) && (
-                          <Bell className="w-4 h-4 text-[#39ff14] animate-pulse" />
+                          <Bell className={`w-4 h-4 animate-pulse ${isGamingMode ? 'text-[#39ff14]' : 'text-green-500'}`} />
                         )}
                       </div>
                       <h4 className="text-base font-bold truncate mt-1">{event.name}</h4>
                       {event.xpRewards.length > 0 && (
-                        <div className="text-[10px] text-[#ffd700] mt-1 font-pixel">
+                        <div className={`text-xs mt-1 ${isGamingMode ? 'text-[#ffd700] font-pixel' : 'text-yellow-600 dark:text-yellow-400'}`}>
                           <Trophy className="w-3 h-3 inline mr-1" />
                           MAX: {getMaxXP(event).toLocaleString('en-US')} XP
                         </div>
@@ -1922,7 +1956,7 @@ function AppContent() {
                   </div>
 
                   <span 
-                    className="text-[10px] px-3 py-1 border-2 shrink-0 font-pixel"
+                    className={`text-xs px-3 py-1 shrink-0 ${isGamingMode ? 'border-2 font-pixel' : 'border rounded-lg'}`}
                     style={{ 
                       backgroundColor: event.roleColor + '15',
                       color: event.roleColor,
@@ -1939,42 +1973,46 @@ function AppContent() {
 
         {/* My Alarms */}
         {isClient && alarmedEvents.size > 0 && (
-          <div className="border-4 border-[#ffd700] bg-[#12121a] p-5 relative pixel-shadow">
-            <div className="absolute top-0 left-0 w-4 h-4 bg-[#ffd700]" />
-            <div className="absolute top-0 right-0 w-4 h-4 bg-[#ffd700]" />
-            <div className="absolute bottom-0 left-0 w-4 h-4 bg-[#ffd700]" />
-            <div className="absolute bottom-0 right-0 w-4 h-4 bg-[#ffd700]" />
+          <div className={`p-5 relative ${isGamingMode ? 'border-4 border-[#ffd700] bg-[#12121a] pixel-shadow' : 'border border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl shadow-sm'}`}>
+            {isGamingMode && (
+              <>
+                <div className="absolute top-0 left-0 w-4 h-4 bg-[#ffd700]" />
+                <div className="absolute top-0 right-0 w-4 h-4 bg-[#ffd700]" />
+                <div className="absolute bottom-0 left-0 w-4 h-4 bg-[#ffd700]" />
+                <div className="absolute bottom-0 right-0 w-4 h-4 bg-[#ffd700]" />
+              </>
+            )}
             
-            <div className="flex items-center gap-3 mb-4 border-b-3 border-[#2a2a4e] pb-3">
-              <div className="w-8 h-8 border-2 border-[#ffd700] flex items-center justify-center">
-                <BellRing className="w-4 h-4 text-[#ffd700] animate-pulse" />
+            <div className={`flex items-center gap-3 mb-4 pb-3 ${isGamingMode ? 'border-b-3 border-[#2a2a4e]' : 'border-b border-yellow-500/30'}`}>
+              <div className={`w-8 h-8 flex items-center justify-center ${isGamingMode ? 'border-2 border-[#ffd700]' : 'border border-yellow-500 rounded-lg bg-yellow-100 dark:bg-yellow-900/30'}`}>
+                <BellRing className={`w-4 h-4 animate-pulse ${isGamingMode ? 'text-[#ffd700]' : 'text-yellow-600 dark:text-yellow-400'}`} />
               </div>
-              <h3 className="text-[10px] font-pixel neon-text-gold">{t('myAlarms')} ({alarmedEvents.size})</h3>
+              <h3 className={`text-sm font-semibold ${isGamingMode ? 'text-[10px] font-pixel neon-text-gold' : 'text-yellow-700 dark:text-yellow-300'}`}>{t('myAlarms')} ({alarmedEvents.size})</h3>
             </div>
             <div className="space-y-2">
               {events.filter(e => alarmedEvents.has(e.id)).map((event) => (
                 <div 
                   key={event.id}
-                  className="flex items-center justify-between p-3 border-3 border-[#ffd700]/30 bg-[#ffd700]/5 hover:bg-[#ffd700]/10 transition-colors"
+                  className={`flex items-center justify-between p-3 transition-colors ${isGamingMode ? 'border-3 border-[#ffd700]/30 bg-[#ffd700]/5 hover:bg-[#ffd700]/10' : 'border border-yellow-500/30 bg-yellow-100/50 dark:bg-yellow-900/10 hover:bg-yellow-200/50 dark:hover:bg-yellow-900/20 rounded-lg'}`}
                 >
                   <div className="flex items-center gap-3">
                     {event.icon && (
                       <img 
                         src={event.icon} 
                         alt={event.name}
-                        className="w-10 h-10 border-2 border-[#ffd700]"
+                        className={`w-10 h-10 ${isGamingMode ? 'border-2 border-[#ffd700]' : 'border border-yellow-500 rounded-lg'}`}
                         style={{ imageRendering: 'pixelated' }}
                       />
                     )}
-                    <Clock className="w-4 h-4 text-[#ffd700]" />
-                    <span className="text-sm text-[#ffd700] font-pixel">{formatTimeWithLabel(event.timeUTC)}</span>
+                    <Clock className={`w-4 h-4 ${isGamingMode ? 'text-[#ffd700]' : 'text-yellow-600 dark:text-yellow-400'}`} />
+                    <span className={`text-sm ${isGamingMode ? 'text-[#ffd700] font-pixel' : 'text-yellow-600 dark:text-yellow-400'}`}>{formatTimeWithLabel(event.timeUTC)}</span>
                     <span className="text-base">{event.name}</span>
-                    <span className="text-[10px] text-[#8888aa]">({getDayName(event.day)})</span>
+                    <span className={`text-xs ${isGamingMode ? 'text-[#8888aa]' : 'text-muted-foreground'}`}>({getDayName(event.day)})</span>
                   </div>
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    className="h-8 text-[10px] text-[#ff0040] hover:text-[#ff0040] hover:bg-[#ff0040]/10 border-2 border-[#ff0040]/50 font-pixel"
+                    className={`h-8 text-xs ${isGamingMode ? 'text-[#ff0040] hover:text-[#ff0040] hover:bg-[#ff0040]/10 border-2 border-[#ff0040]/50 font-pixel' : 'text-red-500 hover:text-red-600 hover:bg-red-100 dark:hover:bg-red-900/20 border border-red-300'}`}
                     onClick={(e) => {
                       e.stopPropagation()
                       toggleEventAlarm(event.id)
@@ -1990,19 +2028,23 @@ function AppContent() {
       </main>
 
       {/* Footer */}
-      <footer className="mt-auto border-t-4 border-[#2a2a4e] bg-[#0a0a0f] relative">
-        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-[#00fff7] via-[#ff00ff] to-[#39ff14] opacity-30" />
+      <footer className={`mt-auto relative ${isGamingMode ? 'border-t-4 border-[#2a2a4e] bg-[#0a0a0f]' : 'border-t border-border bg-background'}`}>
+        {isGamingMode && (
+          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-[#00fff7] via-[#ff00ff] to-[#39ff14] opacity-30" />
+        )}
         <div className="max-w-4xl mx-auto px-4 py-4 text-center">
           <div className="flex items-center justify-center gap-2">
-            <span className="text-[#ffd700]">★</span>
-            <p className="text-[10px] font-pixel text-[#8888aa]">
+            <span className={isGamingMode ? 'text-[#ffd700]' : 'text-primary'}>★</span>
+            <p className={`text-xs ${isGamingMode ? 'font-pixel text-[#8888aa]' : 'text-muted-foreground'}`}>
               {t('footer')}
             </p>
-            <span className="text-[#ffd700]">★</span>
+            <span className={isGamingMode ? 'text-[#ffd700]' : 'text-primary'}>★</span>
           </div>
-          <p className="text-[10px] text-[#2a2a4e] mt-2 font-pixel">
-            PRESS START TO CONTINUE
-          </p>
+          {isGamingMode && (
+            <p className="text-[10px] text-[#2a2a4e] mt-2 font-pixel">
+              PRESS START TO CONTINUE
+            </p>
+          )}
         </div>
       </footer>
 
